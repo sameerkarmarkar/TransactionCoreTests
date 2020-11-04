@@ -1,7 +1,7 @@
 package com.unzer.constants;
 
 public enum TransactionType {
-    PREAUTH("CC.PA"),
+    PREAUTHORIZATION("CC.PA"),
     CAPTURE("CC.CP"),
     REFUND("CC.RF"),
     DEBIT("CC.DB"),

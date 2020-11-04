@@ -35,6 +35,14 @@ public class RestOperations {
                 .and().extract().response();
     }
 
+    public static Response post(String url) {
+        return RestAssured.given().log().all().relaxedHTTPSValidation().baseUri(url).when().get().then().log().all().and().extract().response();
+    }
+
+    public static Response get(String url) {
+        return RestAssured.given().log().all().when().get(url).then().log().all().and().extract().response();
+    }
+
 
 
 }

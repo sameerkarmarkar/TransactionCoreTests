@@ -1,7 +1,7 @@
 package com.unzer.tests.threeds;
 
 import com.unzer.constants.*;
-import com.unzer.util.CronHelper;
+import com.unzer.util.Flow;
 import com.unzer.util.GiccVerifier;
 import com.unzer.util.RequestBuilder;
 import io.restassured.RestAssured;
@@ -10,7 +10,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.apache.commons.httpclient.HttpClient;
@@ -54,111 +53,70 @@ public class GiccProtocolTest {
             .build();
 
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{0}")
     @MethodSource("oneOffTransactions")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForOneOffThreedsTwoTransaction(TransactionType transactionType, Card card, Merchant merchant) {
-
-        RequestType request = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(transactionType).and().and().withResponseUrl().build();
-
-        ResponseType response = execute(request);
+    public void shouldSendCorrectGiccMessageForOneOffThreedsTwoTransaction(String description, Flow flow) {
+        flow.execute();
+        ResponseType response = flow.getLastTransactionResponse();
+        RequestType request = flow.getLastTransactionRequest();
         String shortId = response.getTransaction().getIdentification().getShortID();
-        sendThreedsTwoPares(response);
-        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForOneOff(card.getCardBrand());
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForOneOff(request.getTransaction().getAccount().getBrand());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{0}")
     @MethodSource("returningCustomer")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForReturningCustomerThreedsTwoTransaction(TransactionType initial, TransactionType subsequent, Card card, Merchant merchant) {
-        RequestType initialRequest = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(initial).and().and().withResponseUrl().build();
-
-        ResponseType initialResponse = execute(initialRequest);
-        sendThreedsTwoPares(initialResponse);
-
-        RequestType subsequentRequest = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant).referringTo(initialResponse).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(subsequent).and().build();
-
-        ResponseType subsequentResponse = execute(subsequentRequest);
-        String parentShortId = initialResponse.getTransaction().getIdentification().getShortID();
-        String shortId = subsequentResponse.getTransaction().getIdentification().getShortID();
-        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(card.getCardBrand(), parentShortId);
+    public void shouldSendCorrectGiccMessageForReturningCustomerThreedsTwoTransaction(String description, Flow flow) {
+        flow.execute();
+        RequestType request = flow.getLastTransactionRequest();
+        ResponseType response = flow.getLastTransactionResponse();
+        ResponseType parentResponse = flow.getParentResponse();
+        String shortId = response.getTransaction().getIdentification().getShortID();
+        String parentShortId = parentResponse.getTransaction().getIdentification().getShortID();
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(request.getTransaction().getAccount().getBrand(), parentShortId);
     }
 
     @ParameterizedTest
     @MethodSource("cards")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForUnscheduledRecurringThreedsTwoTransaction(Card card, Merchant merchant) {
-        RequestType registerRequest = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withTransactionType(TransactionType.REGISTRATION)
-                .and().build();
-        ResponseType registerResponse = execute(registerRequest);
+    public void shouldSendCorrectGiccMessageForUnscheduledInitialRecurringTransaction(Card card, Merchant merchant) {
+        Flow flow = Flow.forMerchant(merchant)
+                .startWith().register().withCard(card)
+                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds();
+        flow.execute();
 
-        RequestType initialRecurring = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(TransactionType.DEBIT).and().and().withResponseUrl()
-                .and().withRecurrance(Recurrence.INITIAL).and().referringTo(registerResponse).build();
+        String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
+    }
 
-        ResponseType initialRecurringResponse = execute(initialRecurring);
-        sendThreedsTwoPares(initialRecurringResponse);
+    @ParameterizedTest
+    @MethodSource("cards")
+    @SneakyThrows
+    public void shouldSendCorrectGiccMessageForUnscheduledRepeatedRecurringTransaction(Card card, Merchant merchant) {
+        Flow flow = Flow.forMerchant(merchant)
+                .startWith().register().withCard(card)
+                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds()
+                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.REPEATED).asThreeds();
+        flow.execute();
 
-        String initial = initialRecurringResponse.getTransaction().getIdentification().getShortID();
-        //GICC_VERIFIER.withShortId(initial).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
-
-        RequestType subsequentRecurring = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(TransactionType.DEBIT).and().and().withResponseUrl()
-                .and().withRecurrance(Recurrence.REPEATED).and().referringTo(registerResponse).build();
-
-        ResponseType subsequentRecurringResponse = execute(subsequentRecurring);
-        sendThreedsTwoPares(subsequentRecurringResponse);
-
-        String subsequent = subsequentRecurringResponse.getTransaction().getIdentification().getShortID();
-        System.out.println("Short Id---"+subsequent);
-        GICC_VERIFIER.withShortId(subsequent).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
+        String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
     }
 
     @ParameterizedTest
     @MethodSource("cards")
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForScheduledRecurringThreedsTwoTransaction(Card card, Merchant merchant) {
-        RequestType registerRequest = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withTransactionType(TransactionType.REGISTRATION)
-                .and().withResponseUrl()
-                .and().build();
-        ResponseType registerResponse = execute(registerRequest);
 
-        RequestType initialRecurring = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(TransactionType.DEBIT).and().and().withResponseUrl()
-                .and().withRecurrance(Recurrence.INITIAL).and().referringTo(registerResponse).build();
+        Flow flow = Flow.forMerchant(merchant)
+                .startWith().register().withCard(card)
+                .then().debit().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).withResponseUrl().and().asThreeds()
+                .then().schedule().withSchedule(TransactionType.DEBIT).referringToNth(TransactionType.REGISTRATION);
+        flow.execute();
 
-        ResponseType initialRecurringResponse = execute(initialRecurring);
-        sendThreedsTwoPares(initialRecurringResponse);
-
-        String initial = initialRecurringResponse.getTransaction().getIdentification().getShortID();
-        GICC_VERIFIER.withShortId(initial).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
-
-        RequestType schedule = RequestBuilder.newRequest().withDefaultTransactionInfo()
-                .and().withMerchant(merchant)
-                .and().withCard(card).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(TransactionType.SCHEDULE).and().referringTo(registerResponse)
-                .and().withResponseUrl().withSchedule(TransactionType.DEBIT).build();
-
-        ResponseType subsequentRecurringResponse = execute(schedule);
-
+        String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
     }
 
     @Test
@@ -167,7 +125,7 @@ public class GiccProtocolTest {
         RequestType preauthorization = RequestBuilder.newRequest().withDefaultTransactionInfo()
                 .and().withMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT)
                 .and().withCard(Card.MASTERCARD).and().withAmount("100").and().withCurrency("EUR")
-                .and().withTransactionType(TransactionType.PREAUTH).and().and().withResponseUrl().build();
+                .and().withTransactionType(TransactionType.PREAUTHORIZATION).and().and().withResponseUrl().build();
 
         ResponseType response = execute(preauthorization);
         String shortId = response.getTransaction().getIdentification().getShortID();
@@ -333,15 +291,20 @@ public class GiccProtocolTest {
 
     private static Stream<Arguments> oneOffTransactions() {
         return Stream.of(
-                Arguments.of(TransactionType.PREAUTH, Card.MASTERCARD, Merchant.SIX_THREEDS_TWO_MERCHANT),
-                Arguments.of(TransactionType.DEBIT, Card.VISA, Merchant.SIX_THREEDS_TWO_MERCHANT)
+                Arguments.of("One off preauth with Mstercard",
+                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().preauthorization().withCard(Card.MASTERCARD).asThreeds().withResponseUrl()),
+                Arguments.of("One off preauth with Visa",
+                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().debit().withCard(Card.MASTERCARD).asThreeds().withResponseUrl())
         );
     }
 
     private static Stream<Arguments> returningCustomer() {
         return Stream.of(
-                Arguments.of(TransactionType.PREAUTH, TransactionType.CAPTURE, Card.MASTERCARD, Merchant.SIX_THREEDS_TWO_MERCHANT),
-                Arguments.of(TransactionType.DEBIT, TransactionType.REFUND, Card.VISA, Merchant.SIX_THREEDS_TWO_MERCHANT)
+                Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().debit().withCard(Card.MASTERCARD).asThreeds().withResponseUrl()
+                        .then().refund().referringToNth(TransactionType.DEBIT)),
+                Arguments.of("REGISTER >> DEBIT >> REFUND with VISA", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().register().withCard(Card.VISA)
+                        .then().debit().referringToNth(TransactionType.REGISTRATION).asThreeds().withResponseUrl()
+                        .then().refund().referringToNth(TransactionType.DEBIT))
         );
     }
 

@@ -1,6 +1,9 @@
 package com.unzer;
 
-import com.unzer.util.GiccVerifier;
+import com.unzer.constants.Card;
+import com.unzer.constants.Merchant;
+import com.unzer.constants.TransactionType;
+import com.unzer.util.Flow;
 import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,14 @@ public class SampleTest {
     @Test
     @SneakyThrows
     public void sampleTest() {
+
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT)
+                .startWith().preauthorization().withCard(Card.MASTERCARD).withResponseUrl().asThreeds()
+                .then().capture().referringToNth(TransactionType.PREAUTHORIZATION);
+
+        flow.execute();
+
+
         //TransactionFlow transactionFlow = TransactionFlow.startWith().preauthorization().execute();
 
         /*QName _Request_QNAME = new QName("", "Request");
@@ -39,10 +50,10 @@ public class SampleTest {
         //assertEquals(response.getValue().getTransaction().getProcessing().getResult(), "ACK");
 
 
-        GiccVerifier giccVerifier = new GiccVerifier();
-        giccVerifier.withShortId("4676.5760.9705").verifyField("1","0100");
+       /* GiccVerifier giccVerifier = new GiccVerifier();
+        giccVerifier.withShortId("4676.5760.9705").verifyField("1","0100");*/
 
-        System.out.println("Done");
+        flow.getExecutedTransactions();
 
 
     }

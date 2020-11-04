@@ -22,10 +22,58 @@ public class RequestBuilder {
     private RequestType requestType;
     private static final QName _Request_QNAME = new QName("", "Request");
 
+    public static RequestBuilder newRequest(RequestType requestType) {
+        RequestBuilder requestBuilder = new RequestBuilder();
+        requestBuilder.requestType = requestType;
+        return requestBuilder;
+    }
+
     public static RequestBuilder newRequest() {
         RequestBuilder requestBuilder = new RequestBuilder();
         requestBuilder.requestType = new RequestType();
         return requestBuilder;
+    }
+
+    public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.DEBIT)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.REFUND)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.CAPTURE)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.REGISTRATION)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.SCHEDULE)
+                .and().withAmountAndCurrency(amount, currency)
+                .build();
     }
 
     public RequestBuilder withSenderId(String senderId) {

@@ -18,4 +18,5 @@ public enum Merchant {
         this.password = password;
     }
 
+
 }

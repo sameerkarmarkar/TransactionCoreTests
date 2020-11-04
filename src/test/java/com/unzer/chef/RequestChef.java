@@ -16,7 +16,7 @@ public class RequestChef {
 
     public static RequestType preauthorization(Merchant merchant, String amount, String curreny) {
         updateMerchantCredentials(merchant);
-        updateTransactionType(TransactionType.PREAUTH);
+        updateTransactionType(TransactionType.PREAUTHORIZATION);
         return requestType;
     }
 
@@ -26,7 +26,7 @@ public class RequestChef {
                 .and().withDefaultTransactionInfo()
                 .and().withChannel(merchant.getChannel()).and().withUser(merchant.getUser(), merchant.getPassword())
                 .and().withAmountAndCurrency(amount, currency)
-                .and().withTransactionType(TransactionType.PREAUTH)
+                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
                 .build();
     }
 
