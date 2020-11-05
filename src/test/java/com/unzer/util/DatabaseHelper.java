@@ -31,6 +31,12 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
+    public String getTransactionStatus(String shortId) {
+        String query = "Select ID_TXN_STATUS from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return executeAndGetResult(query);
+    }
+
+    @SneakyThrows
     public String getGiccMessage(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and STR_LOG like '%isomsg%'";
