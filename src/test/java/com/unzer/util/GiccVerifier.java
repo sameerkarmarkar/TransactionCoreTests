@@ -20,7 +20,6 @@ public class GiccVerifier {
 
     private GiccMessage message;
     private String shortId;
-    private static DatabaseHelper dbHelper = DatabaseHelper.INSTANCE;
 
     public static GiccVerifier INSTANCE = new GiccVerifier();
 
@@ -32,7 +31,7 @@ public class GiccVerifier {
 
     @SneakyThrows
     public GiccVerifier getMessage() {
-        String giccMessage = dbHelper.getGiccMessage(shortId);
+        String giccMessage = DatabaseHelper.getGiccMessage(shortId);
         JAXBContext jaxbContext = JAXBContext.newInstance(GiccMessage.class);
 
         InputStream stream = new ByteArrayInputStream(giccMessage.getBytes("UTF-8"));
@@ -75,7 +74,7 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
                 () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
                 () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(dbHelper.getDsTransId(shortId)))
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
         );
     }
 
@@ -90,7 +89,7 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand, parentShortId))),
                 () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand, parentShortId))),
                 () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(dbHelper.getDsTransId(parentShortId)))
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(parentShortId)))
         );
     }
 
@@ -107,7 +106,7 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
                 () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
                 () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(dbHelper.getDsTransId(shortId)))
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
         );
     }
 
@@ -123,7 +122,7 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
                 () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
                 () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(dbHelper.getDsTransId(shortId)))
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
         );
     }
 
@@ -143,7 +142,7 @@ public class GiccVerifier {
 
     public String getExpected6063(String brand, String shortId) {
         return brand.equals(Card.MASTERCARD.getCardBrand())
-                ? dbHelper.getCavv(shortId)
+                ? DatabaseHelper.getCavv(shortId)
                 : null;
     }
     public String getExpected6040(String brand) {
@@ -151,7 +150,7 @@ public class GiccVerifier {
     }
 
     public String getExpected6040(String brand, String shortId) {
-        String eci = dbHelper.getEci(shortId);
+        String eci = DatabaseHelper.getEci(shortId);
         if (brand.equals(Card.MASTERCARD.getCardBrand())) {
             switch (eci) {
                 case "00":

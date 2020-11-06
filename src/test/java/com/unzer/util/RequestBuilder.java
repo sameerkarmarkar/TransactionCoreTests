@@ -95,9 +95,7 @@ public class RequestBuilder {
 
         transaction.setMode(TestMode.INTEGRATOR_TEST.name());
         transaction.setResponse("SYNC");
-        transaction.setAccount(requestAccountType());
         transaction.setCustomer(customerType());
-        transaction.setAccount(requestAccountType());
         requestType.setTransaction(transaction);
         requestType.setTransaction(transaction);
         return this;
@@ -214,7 +212,7 @@ public class RequestBuilder {
         identification.setReferenceID(parent.getTransaction().getIdentification().getUniqueID());
         transaction.setIdentification(identification);
 
-        AccountRequestType account = transaction.getAccount();
+        AccountRequestType account = transaction.getAccount() != null ? transaction.getAccount() : new AccountRequestType();
         account.setNumber(parent.getTransaction().getAccount().getNumber());
         transaction.setAccount(account);
         transaction.setCustomer(null);

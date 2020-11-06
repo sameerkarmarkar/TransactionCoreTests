@@ -13,7 +13,26 @@ import static org.hamcrest.Matchers.*;
 @Slf4j
 public class DatabaseHelper {
     private final static Configuration config = Configuration.INSTANCE;
-    private Connection conn;
+    private static Connection conn;
+
+    static {
+        if (conn == null) {
+            try {
+                OracleDataSource ods = new OracleDataSource();
+                ods.setDriverType("thin");
+                ods.setServerName(config.getProperty("db.host"));
+                ods.setPortNumber(Integer.valueOf(config.getProperty("db.port")));
+                ods.setServiceName(config.getProperty("db.sid"));
+                ods.setUser(config.getProperty("db.user"));
+                ods.setPassword(config.getProperty("db.password"));
+                conn = ods.getConnection();
+                log.info("Database connection successful");
+            } catch (SQLException sqlException) {
+                log.error("problems while connecting to database");
+            }
+
+        }
+    }
 
     public static DatabaseHelper INSTANCE = new DatabaseHelper();
 
@@ -31,13 +50,13 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getTransactionStatus(String shortId) {
+    public static String getTransactionStatus(String shortId) {
         String query = "Select ID_TXN_STATUS from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         return executeAndGetResult(query);
     }
 
     @SneakyThrows
-    public String getGiccMessage(String shortId) {
+    public static String getGiccMessage(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and STR_LOG like '%isomsg%'";
         String isoMessage = executeAndGetResult(query);
@@ -46,7 +65,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getDatabaseId(String shortId) {
+    public static String getDatabaseId(String shortId) {
         String query = "select id from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         String id = executeAndGetResult(query);
         if (id.isEmpty()) log.error("no record found for short id {}", shortId);
@@ -55,7 +74,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getEci(String shortId) {
+    public static String getEci(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_ECI from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String eci = executeAndGetResult(query);
@@ -64,7 +83,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getCavv(String shortId) {
+    public static String getCavv(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_VERIFICATION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String cavv = executeAndGetResult(query);
@@ -73,7 +92,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getDsTransId(String shortId) {
+    public static String getDsTransId(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_DS_TRANSACTION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String dsTransId = executeAndGetResult(query);
@@ -82,7 +101,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    private String executeAndGetResult(String query) {
+    private static String executeAndGetResult(String query) {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         int numberOfRecords = 0;
