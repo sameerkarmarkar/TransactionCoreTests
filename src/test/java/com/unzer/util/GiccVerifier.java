@@ -4,6 +4,7 @@ import com.unzer.constants.Card;
 import com.unzer.domain.GiccField;
 import com.unzer.domain.GiccMessage;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -119,6 +120,22 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(equalTo(brand.equals(Card.MASTERCARD.getCardBrand()) ? "02" : "05"))),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
                 () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), equalTo("01")),
+                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
+                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
+                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
+        );
+    }
+
+    public void verifyFieldsForScheduledSubsequentRecurring(String brand) {
+        assertAll(
+                () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
+                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
+                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
+                () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
+                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo("02")),
+                () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
+                () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), equalTo("03")),
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
                 () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
                 () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),

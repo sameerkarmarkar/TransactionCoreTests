@@ -5,6 +5,7 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.jsoup.Jsoup;

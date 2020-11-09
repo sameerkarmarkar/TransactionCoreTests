@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import net.hpcsoft.adapter.payonxml.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Test;
 
 import javax.xml.namespace.QName;
 
@@ -41,10 +42,26 @@ public class RequestBuilder {
                 .build();
     }
 
+    public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
     public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.DEBIT)
                 .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.DEBIT)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
                 .build();
     }
 
@@ -55,10 +72,26 @@ public class RequestBuilder {
                 .build();
     }
 
+    public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.REFUND)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
     public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.CAPTURE)
                 .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod, String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.CAPTURE)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
                 .build();
     }
 
@@ -69,10 +102,26 @@ public class RequestBuilder {
                 .build();
     }
 
+    public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.REGISTRATION)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
     public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.SCHEDULE)
                 .and().withAmountAndCurrency(amount, currency)
+                .build();
+    }
+
+    public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(TransactionType.SCHEDULE)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
                 .build();
     }
 
@@ -240,7 +289,7 @@ public class RequestBuilder {
         action.setType(transactionType.getSubCode());
 
         ExecutionType execution = new ExecutionType();
-        execution.setExpression(CronHelper.createNew().afterSeconds(10).and().afterSeconds(10).inCurrentMinute().and().inCurrentHour().getExpression());
+        execution.setExpression(CronHelper.createNew().afterSeconds(60).inCurrentMinute().and().inCurrentHour().getExpression());
 
         DurationType duration = new DurationType();
         duration.setNumber(1);

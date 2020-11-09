@@ -1,9 +1,11 @@
 package com.unzer.util;
 
+import com.unzer.constants.TransactionType;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.StringUtils;
+import org.awaitility.core.Predicate;
 
 import java.sql.*;
 
@@ -52,7 +54,34 @@ public class DatabaseHelper {
     @SneakyThrows
     public static String getTransactionStatus(String shortId) {
         String query = "Select ID_TXN_STATUS from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
-        return executeAndGetResult(query);
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getTransactionResult(String shortId) {
+        String query = "Select ID_RESULT from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getInitiation(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_INITIATION from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getInitialSubsequent(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_INITIAL_SUBSEQUENT from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static boolean isScheduled(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_SCHEDULED from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query)).equals("SCHEDULED");
     }
 
     @SneakyThrows
@@ -101,6 +130,19 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
+    public static String getScheduledTransactionShortId(String shortId) {
+        String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        String rootId = executeAndGetResult(query);
+        String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
+        return Eventually.get(() -> executeAndGetResult(query2), 120, 30);
+    }
+
+    public static String getTransactionType(String shortId) {
+        String query = "Select ID_TXN_TYPE from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
     private static String executeAndGetResult(String query) {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
@@ -122,5 +164,13 @@ public class DatabaseHelper {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         return rs;
+    }
+
+    @SneakyThrows
+    public static void closeConnection() {
+        if (conn != null && !conn.isClosed())
+            conn.close();
+        conn = null;
+        log.info("Closed the database connection and set conn to null");
     }
 }

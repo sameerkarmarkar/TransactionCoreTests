@@ -1,6 +1,7 @@
 package com.unzer.tests.threeds.creditcard.threeds;
 
 import com.unzer.constants.*;
+import com.unzer.util.DatabaseHelper;
 import com.unzer.util.Flow;
 import com.unzer.util.GiccVerifier;
 import com.unzer.util.RequestBuilder;
@@ -36,23 +37,6 @@ public class GiccProtocolTest {
     private static final GiccVerifier GICC_VERIFIER = GiccVerifier.INSTANCE;
     private static final QName _Request_QNAME = new QName("", "Request");
 
-    private static String termUrl, md, paReq;
-    private static String acsUrl = "https://3ds-acs.test.modirum.com/mdpayacs/pareq";
-    private static String acsPareqUrl = "https://3ds-acs.test.modirum.com/mdpayacs/pareq;mdsessionid=43E546BA51D75650309D54DBB366DC72";
-    private static String sessionUrl;
-    private static String pares;
-    private static Logger log = Logger.getAnonymousLogger();
-
-
-    private static final RequestSpecification acsReqSpec = new RequestSpecBuilder()
-            .setBaseUri(acsUrl)
-            .build();
-
-    private static final RequestSpecification acsPareqSpec = new RequestSpecBuilder()
-            .setBaseUri(acsPareqUrl)
-            .build();
-
-
     @ParameterizedTest(name = "{0}")
     @MethodSource("oneOffTransactions")
     @SneakyThrows
@@ -67,14 +51,14 @@ public class GiccProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("returningCustomer")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForReturningCustomerThreedsTwoTransaction(String description, Flow flow) {
+    public void shouldSendCorrectGiccMessageForReturningCustomerThreedsTwoTransaction(String description, Flow flow, String cardBrand) {
         flow.execute();
         RequestType request = flow.getLastTransactionRequest();
         ResponseType response = flow.getLastTransactionResponse();
         ResponseType parentResponse = flow.getParentResponse();
         String shortId = response.getTransaction().getIdentification().getShortID();
         String parentShortId = parentResponse.getTransaction().getIdentification().getShortID();
-        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(request.getTransaction().getAccount().getBrand(), parentShortId);
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(cardBrand, parentShortId);
     }
 
     @ParameterizedTest
@@ -97,7 +81,7 @@ public class GiccProtocolTest {
         Flow flow = Flow.forMerchant(merchant)
                 .startWith().register().withCard(card)
                 .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds()
-                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.REPEATED).asThreeds();
+                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.REPEATED);
         flow.execute();
 
         String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
@@ -107,7 +91,7 @@ public class GiccProtocolTest {
     @ParameterizedTest
     @MethodSource("cards")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForScheduledRecurringThreedsTwoTransaction(Card card, Merchant merchant) {
+    public void shouldSendCorrectGiccMessageForSubsequentScheduledThreedsTwoTransaction(Card card, Merchant merchant) {
 
         Flow flow = Flow.forMerchant(merchant)
                 .startWith().register().withCard(card)
@@ -116,7 +100,8 @@ public class GiccProtocolTest {
         flow.execute();
 
         String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
-        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
+        String scheduledTransaction  = DatabaseHelper.getScheduledTransactionShortId(shortID);
+        GICC_VERIFIER.withShortId(scheduledTransaction).getMessage().and().verifyFieldsForScheduledSubsequentRecurring(card.getCardBrand());
     }
 
     private static Stream<Arguments> oneOffTransactions() {
@@ -131,10 +116,10 @@ public class GiccProtocolTest {
     private static Stream<Arguments> returningCustomer() {
         return Stream.of(
                 Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().debit().withCard(Card.MASTERCARD).asThreeds().withResponseUrl()
-                        .then().refund().referringToNth(TransactionType.DEBIT)),
-                Arguments.of("REGISTER >> DEBIT >> REFUND with VISA", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().register().withCard(Card.VISA)
+                        .then().refund().referringToNth(TransactionType.DEBIT), "MASTER"),
+                Arguments.of("REGISTER >> DEBIT >> REFUND with VISA", Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT).startWith().register().withCard(Card.VISA)
                         .then().debit().referringToNth(TransactionType.REGISTRATION).asThreeds().withResponseUrl()
-                        .then().refund().referringToNth(TransactionType.DEBIT))
+                        .then().refund().referringToNth(TransactionType.DEBIT), "VISA")
         );
     }
 
