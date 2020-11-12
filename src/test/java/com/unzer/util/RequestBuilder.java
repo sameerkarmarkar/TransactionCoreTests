@@ -241,6 +241,7 @@ public class RequestBuilder {
     public RequestBuilder withCard(Card card) {
         TransactionRequestType transaction = requestType.getTransaction();
         transaction.setAccount(requestAccountType(card));
+        AuthenticationType auth = new AuthenticationType();
         requestType.setTransaction(transaction);
         return this;
     }
@@ -289,7 +290,7 @@ public class RequestBuilder {
         action.setType(transactionType.getSubCode());
 
         ExecutionType execution = new ExecutionType();
-        execution.setExpression(CronHelper.createNew().afterSeconds(60).inCurrentMinute().and().inCurrentHour().getExpression());
+        execution.setExpression(CronHelper.createNew().afterSeconds(90).inCurrentMinute().and().inCurrentHour().getExpression());
 
         DurationType duration = new DurationType();
         duration.setNumber(1);

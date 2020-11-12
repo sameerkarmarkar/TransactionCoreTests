@@ -4,13 +4,11 @@ import com.unzer.constants.Card;
 import com.unzer.domain.GiccField;
 import com.unzer.domain.GiccMessage;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,10 +85,10 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo(getExpected6040(brand, parentShortId))),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), is(emptyOrNullString())),
-                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand, parentShortId))),
-                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand, parentShortId))),
-                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(parentShortId)))
+                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), is(emptyOrNullString()))
         );
     }
 
@@ -100,8 +98,8 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
                 () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"),
-                        brand.equals(Card.VISA.getCardBrand()) ? equalTo("10") : equalTo("11")),
-                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo(brand.equals(Card.MASTERCARD.getCardBrand()) ? "06" : "01")),
+                        brand.equals(Card.VISA_1.getCardBrand()) ? equalTo("10") : equalTo("11")),
+                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo(brand.equals(Card.MASTERCARD_1.getCardBrand()) ? "06" : "01")),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
@@ -117,13 +115,13 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
                 () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
-                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(equalTo(brand.equals(Card.MASTERCARD.getCardBrand()) ? "02" : "05"))),
+                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(equalTo(brand.equals(Card.MASTERCARD_1.getCardBrand()) ? "02" : "05"))),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
                 () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), equalTo("01")),
-                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
-                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
-                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
+                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), is(emptyOrNullString()))
         );
     }
 
@@ -136,10 +134,10 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo("02")),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
                 () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), equalTo("03")),
-                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
-                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), equalTo(getExpected6063(brand))),
-                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), equalTo("1")),
-                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), equalTo(DatabaseHelper.getDsTransId(shortId)))
+                () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.63", getSubFieldValue("60","63"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.72", getSubFieldValue("60","72"), is(emptyOrNullString())),
+                () -> assertThat("invalid value for field 60.73", getSubFieldValue("60","73"), is(emptyOrNullString()))
         );
     }
 
@@ -148,7 +146,7 @@ public class GiccVerifier {
     }
 
     public String getExpected6062(String brand, String shortId) {
-        return brand.equals(Card.VISA.getCardBrand())
+        return brand.equals(Card.VISA_1.getCardBrand())
                 ? "<20 bytes binary>"
                 : null;
     }
@@ -158,7 +156,7 @@ public class GiccVerifier {
     }
 
     public String getExpected6063(String brand, String shortId) {
-        return brand.equals(Card.MASTERCARD.getCardBrand())
+        return brand.equals(Card.MASTERCARD_1.getCardBrand())
                 ? DatabaseHelper.getCavv(shortId)
                 : null;
     }
@@ -168,7 +166,7 @@ public class GiccVerifier {
 
     public String getExpected6040(String brand, String shortId) {
         String eci = DatabaseHelper.getEci(shortId);
-        if (brand.equals(Card.MASTERCARD.getCardBrand())) {
+        if (brand.equals(Card.MASTERCARD_1.getCardBrand())) {
             switch (eci) {
                 case "00":
                     return "7";
@@ -183,7 +181,7 @@ public class GiccVerifier {
                     return "11";
             }
 
-        } else if (brand.equals(Card.VISA.getCardBrand())) {
+        } else if (brand.equals(Card.VISA_1.getCardBrand())) {
             switch (eci) {
                 case "07":
                     return "7";

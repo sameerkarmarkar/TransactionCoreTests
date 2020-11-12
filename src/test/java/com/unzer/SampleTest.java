@@ -14,7 +14,7 @@ public class SampleTest {
     public void sampleTest() {
 
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT)
-                .startWith().preauthorization().withCard(Card.MASTERCARD).withResponseUrl().asThreeds()
+                .startWith().preauthorization().withCard(Card.MASTERCARD_1).withResponseUrl().asThreeds()
                 .then().capture().referringToNth(TransactionType.PREAUTHORIZATION);
 
         flow.execute();

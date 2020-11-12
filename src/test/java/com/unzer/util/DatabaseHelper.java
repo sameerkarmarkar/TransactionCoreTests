@@ -32,23 +32,7 @@ public class DatabaseHelper {
             } catch (SQLException sqlException) {
                 log.error("problems while connecting to database");
             }
-
         }
-    }
-
-    public static DatabaseHelper INSTANCE = new DatabaseHelper();
-
-    @SneakyThrows
-    private DatabaseHelper() {
-        OracleDataSource ods = new OracleDataSource();
-        ods.setDriverType("thin");
-        ods.setServerName(config.getProperty("db.host"));
-        ods.setPortNumber(Integer.valueOf(config.getProperty("db.port")));
-        ods.setServiceName(config.getProperty("db.sid"));
-        ods.setUser(config.getProperty("db.user"));
-        ods.setPassword(config.getProperty("db.password"));
-        conn = ods.getConnection();
-        log.info("Established connection with the database");
     }
 
     @SneakyThrows
@@ -134,7 +118,7 @@ public class DatabaseHelper {
         String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         String rootId = executeAndGetResult(query);
         String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
-        return Eventually.get(() -> executeAndGetResult(query2), 120, 30);
+        return Eventually.get(() -> executeAndGetResult(query2), 180, 10);
     }
 
     public static String getTransactionType(String shortId) {
