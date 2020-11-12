@@ -62,6 +62,10 @@ public class RestOperations {
         return RestAssured.given().log().all().when().get(url).then().log().all().and().extract().response();
     }
 
+    public static Response get(RequestSpecification spec) {
+        return RestAssured.given().log().all().and().spec(spec).when().get().then().log().all().and().extract().response();
+    }
+
 
 
 }

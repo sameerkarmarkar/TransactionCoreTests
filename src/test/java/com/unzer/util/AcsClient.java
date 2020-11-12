@@ -75,9 +75,21 @@ public class AcsClient {
         return sessionUrl;
     }
 
+    private String getpassword(String sessionUrl) {
+        RequestSpecification acsReqSpec = new RequestSpecBuilder()
+                .setUrlEncodingEnabled(false)
+                .setBaseUri(sessionUrl)
+                .build();
+        Response response = RestOperations.get(acsReqSpec);
+        Document document = Jsoup.parse(response.asString());
+        return document.select("dt:contains(Personal) + dd").first().text();
+    }
+
     private String getPares(String sessionUrl) {
+        String password = getpassword(sessionUrl);
+
         Map parameters = new HashMap<String, String>();
-        parameters.put("password", "secret3");
+        parameters.put("password", password);
         parameters.put("submit", "Submit");
 
         RequestSpecification acsReqSpec = new RequestSpecBuilder()
