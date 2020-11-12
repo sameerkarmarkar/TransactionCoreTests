@@ -290,7 +290,7 @@ public class RequestBuilder {
         action.setType(transactionType.getSubCode());
 
         ExecutionType execution = new ExecutionType();
-        execution.setExpression(CronHelper.createNew().afterSeconds(90).inCurrentMinute().and().inCurrentHour().getExpression());
+        execution.setExpression(CronHelper.createNew().afterSeconds(30).inCurrentMinute().and().inCurrentHour().getExpression());
 
         DurationType duration = new DurationType();
         duration.setNumber(1);

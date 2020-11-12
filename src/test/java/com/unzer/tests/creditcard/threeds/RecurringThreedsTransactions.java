@@ -72,8 +72,8 @@ public class RecurringThreedsTransactions extends BaseTest {
 
     }
 
-    //@ParameterizedTest(name = "{0}")
-    //@MethodSource("scheduledRecurringFlows")
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("scheduledRecurringFlows")
     public void shouldNotNeedThreedsAuthorizationForScheduledRepeatedRecurring(String description, Flow flow, String scheduledTxnType) {
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
@@ -129,8 +129,9 @@ public class RecurringThreedsTransactions extends BaseTest {
                 Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT (EVO)",
                         Flow.forMerchant(Merchant.EVO_THREEDS_TWO_MERCHANT)
                         .startWith().register().withCard(Card.VISA_2)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
-                        .then().debit().referringToNth(TransactionType.REGISTRATION)),
+                        .then().debit().referringToNth(TransactionType.REGISTRATION)
+                         .withRecurringIndicator(Recurrence.INITIAL).and().withResponseUrl().and().asThreeds()
+                        .then().debit().referringToNth(TransactionType.REGISTRATION).withRecurringIndicator(Recurrence.REPEATED).withResponseUrl()),
                 Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT >> DEBIT (KALIXA)",
                         Flow.forMerchant(Merchant.KALIXA_THREEDS_TWO_MERCHANT)
                         .startWith().register().withCard(Card.MASTERCARD_3)
@@ -148,23 +149,6 @@ public class RecurringThreedsTransactions extends BaseTest {
                         .startWith().register().withCard(Card.MASTERCARD_3)
                         .then().debit().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
                         .then().debit().referringToNth(TransactionType.REGISTRATION)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION)),
-                Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT (POSTBANK)",
-                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT)
-                        .startWith().register().withCard(Card.MASTERCARD_3)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
-                        .then().debit().referringToNth(TransactionType.REGISTRATION)),
-                Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT (POSTBANK)",
-                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT)
-                        .startWith().register().withCard(Card.MASTERCARD_3)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
-                        .then().refund().referringToNth(TransactionType.DEBIT)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION)),
-                Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT (POSTBANK)",
-                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT)
-                        .startWith().register().withCard(Card.MASTERCARD_3)
-                        .then().preauthorization().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
-                        .then().capture().referringToNth(TransactionType.PREAUTHORIZATION)
                         .then().debit().referringToNth(TransactionType.REGISTRATION))
 
                 );

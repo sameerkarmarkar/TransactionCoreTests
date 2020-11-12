@@ -118,7 +118,7 @@ public class DatabaseHelper {
         String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         String rootId = executeAndGetResult(query);
         String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
-        return Eventually.get(() -> executeAndGetResult(query2), 180, 10);
+        return Eventually.get(() -> executeAndGetResult(query2), 120, 10);
     }
 
     public static String getTransactionType(String shortId) {
