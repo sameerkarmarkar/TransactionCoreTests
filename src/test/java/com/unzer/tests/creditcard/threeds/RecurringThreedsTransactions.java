@@ -18,11 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class RecurringThreedsTransactions extends BaseTest {
 
-    private static final TestMode mode = TestMode.INTEGRATOR_TEST;
-
     @Test
     public void shouldKeepTheTransactionPendingWhenThreedsAuthorizationIsNotCompleted() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT)
                 .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().debit().referringToNth(TransactionType.REGISTRATION).withResponseUrl();
 
@@ -40,7 +38,7 @@ public class RecurringThreedsTransactions extends BaseTest {
 
     @Test
     public void shouldCompleteTransactionProcesingWhenThreedsAuthorizationIsCompleted() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT)
                 .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().preauthorization().referringToNth(TransactionType.REGISTRATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1);
 
@@ -100,7 +98,7 @@ public class RecurringThreedsTransactions extends BaseTest {
 
     @Test
     public void shouldNotAllowThreedsTransactionInScheduleWithoutInitialAutorization() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT)
                 .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().schedule().withSchedule(TransactionType.DEBIT).referringToNth(TransactionType.REGISTRATION);
         flow.execute();

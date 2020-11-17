@@ -5,15 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import net.hpcsoft.adapter.payonxml.*;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.Test;
 
 import javax.xml.namespace.QName;
-
-import java.text.SimpleDateFormat;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.TimeZone;
 
 import static com.unzer.chef.DataChef.*;
 
@@ -42,7 +35,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+    public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.PREAUTHORIZATION)
                 .and().withAmountAndCurrency(amount, currency)
@@ -57,7 +50,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+    public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.DEBIT)
                 .and().withAmountAndCurrency(amount, currency)
@@ -72,7 +65,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+    public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.REFUND)
                 .and().withAmountAndCurrency(amount, currency)
@@ -87,7 +80,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod, String amount, String currency, TestMode mode) {
+    public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod, String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.CAPTURE)
                 .and().withAmountAndCurrency(amount, currency)
@@ -102,7 +95,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+    public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.REGISTRATION)
                 .and().withAmountAndCurrency(amount, currency)
@@ -117,7 +110,7 @@ public class RequestBuilder {
                 .build();
     }
 
-    public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TestMode mode) {
+    public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(TransactionType.SCHEDULE)
                 .and().withAmountAndCurrency(amount, currency)
@@ -142,7 +135,7 @@ public class RequestBuilder {
         TransactionRequestType transaction = requestType.getTransaction() != null
                 ? requestType.getTransaction() : new TransactionRequestType();
 
-        transaction.setMode(TestMode.INTEGRATOR_TEST.name());
+        transaction.setMode(TransactionMode.INTEGRATOR_TEST.name());
         transaction.setResponse("SYNC");
         transaction.setCustomer(customerType());
         requestType.setTransaction(transaction);
@@ -150,7 +143,7 @@ public class RequestBuilder {
         return this;
     }
 
-    public RequestBuilder withMode(TestMode mode) {
+    public RequestBuilder withMode(TransactionMode mode) {
         TransactionRequestType transaction = requestType.getTransaction() != null
                 ? requestType.getTransaction() : new TransactionRequestType();
         transaction.setMode(mode.name());

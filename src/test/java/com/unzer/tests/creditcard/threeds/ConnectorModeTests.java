@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ConnectorModeTests extends BaseTest {
 
-    private static final TestMode mode = TestMode.CONNECTOR_TEST;
+    private static final TransactionMode mode = TransactionMode.CONNECTOR_TEST;
 
     @Test
     public void shouldProcessThreedsTwoTransactionInConnectortestMode() {

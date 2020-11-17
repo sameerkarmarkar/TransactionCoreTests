@@ -72,9 +72,9 @@ public class GiccProtocolTest extends BaseTest {
         GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
     }
 
-    //@ParameterizedTest
-    //@MethodSource("cards")
-    //@SneakyThrows
+    @ParameterizedTest
+    @MethodSource("cards")
+    @SneakyThrows
     public void shouldSendCorrectGiccMessageForSubsequentScheduledThreedsTwoTransaction(Card card, Merchant merchant) {
 
         Flow flow = Flow.forMerchant(merchant)

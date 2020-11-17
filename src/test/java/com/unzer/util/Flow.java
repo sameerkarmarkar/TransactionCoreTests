@@ -14,10 +14,11 @@ import java.util.stream.Collectors;
 public class Flow {
 
     private static final CoreClient coreClient = CoreClient.INSTANCE;
+    private static final Configuration conf = Configuration.INSTANCE;
 
     private RequestType request;
     private Merchant merchant;
-    private TestMode mode = TestMode.INTEGRATOR_TEST;
+    private TransactionMode mode = TransactionMode.as(conf.getProperty("transaction.mode"));
     private boolean isThreeDs = false;
     private ThreedsVersion threeDsVersion;
     private PaymentMethod paymentMethod;
@@ -130,7 +131,7 @@ public class Flow {
         return this;
     }
 
-    public Flow inMode(TestMode mode) {
+    public Flow inMode(TransactionMode mode) {
         this.mode = mode;
         return this;
     }
