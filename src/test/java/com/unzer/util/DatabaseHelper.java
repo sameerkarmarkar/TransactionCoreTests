@@ -1,16 +1,13 @@
 package com.unzer.util;
 
-import com.unzer.constants.TransactionType;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.StringUtils;
-import org.awaitility.core.Predicate;
 
 import java.sql.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 @Slf4j
 public class DatabaseHelper {

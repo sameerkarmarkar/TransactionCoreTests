@@ -30,14 +30,15 @@ public class RequestBuilder {
 
     public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
+                .and().withTransactionType(paymentMethod, TransactionCode.PREAUTHORIZATION)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType preauthorization(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
+
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
+                .and().withTransactionType(paymentMethod, TransactionCode.PREAUTHORIZATION)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -45,14 +46,14 @@ public class RequestBuilder {
 
     public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.DEBIT)
+                .and().withTransactionType(paymentMethod, TransactionCode.DEBIT)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType debit(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.DEBIT)
+                .and().withTransactionType(paymentMethod, TransactionCode.DEBIT)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -60,14 +61,14 @@ public class RequestBuilder {
 
     public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.REFUND)
+                .and().withTransactionType(paymentMethod, TransactionCode.REFUND)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.REFUND)
+                .and().withTransactionType(paymentMethod, TransactionCode.REFUND)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -75,14 +76,14 @@ public class RequestBuilder {
 
     public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.CAPTURE)
+                .and().withTransactionType(paymentMethod, TransactionCode.CAPTURE)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod, String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.CAPTURE)
+                .and().withTransactionType(paymentMethod, TransactionCode.CAPTURE)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -90,14 +91,14 @@ public class RequestBuilder {
 
     public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.REGISTRATION)
+                .and().withTransactionType(paymentMethod, TransactionCode.REGISTERATION)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType register(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.REGISTRATION)
+                .and().withTransactionType(paymentMethod, TransactionCode.REGISTERATION)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -105,14 +106,14 @@ public class RequestBuilder {
 
     public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.SCHEDULE)
+                .and().withTransactionType(paymentMethod, TransactionCode.SCHEDULE)
                 .and().withAmountAndCurrency(amount, currency)
                 .build();
     }
 
     public static RequestType schedule(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
-                .and().withTransactionType(TransactionType.SCHEDULE)
+                .and().withTransactionType(paymentMethod, TransactionCode.SCHEDULE)
                 .and().withAmountAndCurrency(amount, currency)
                 .and().withMode(mode)
                 .build();
@@ -197,12 +198,13 @@ public class RequestBuilder {
         return withAmountAndCurrency(null, currency);
     }
 
-    public RequestBuilder withTransactionType(TransactionType transactionType) {
+    public RequestBuilder withTransactionType(PaymentMethod paymentMethod, TransactionCode transactionCode) {
+        String paymentCode = paymentMethod.getMethod() + "." + transactionCode.getCode();
         TransactionRequestType transaction = requestType.getTransaction() != null
                 ? requestType.getTransaction() : new TransactionRequestType();
         PaymentRequestType paymentType = transaction.getPayment() != null
                 ? transaction.getPayment() : new PaymentRequestType();
-        paymentType.setCode(transactionType.getCode());
+        paymentType.setCode(paymentCode);
         transaction.setPayment(paymentType);
         requestType.setTransaction(transaction);
         return this;
@@ -275,12 +277,12 @@ public class RequestBuilder {
         return this;
     }
 
-    public RequestBuilder withSchedule(TransactionType transactionType) {
+    public RequestBuilder withSchedule(TransactionCode transactionCode) {
         TransactionRequestType transaction = requestType.getTransaction();
 
         JobType job = new JobType();
         ActionType action = new ActionType();
-        action.setType(transactionType.getSubCode());
+        action.setType(transactionCode.getCode());
 
         ExecutionType execution = new ExecutionType();
         execution.setExpression(CronHelper.createNew().afterSeconds(30).inCurrentMinute().and().inCurrentHour().getExpression());

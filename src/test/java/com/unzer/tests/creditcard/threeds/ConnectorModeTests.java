@@ -19,8 +19,8 @@ public class ConnectorModeTests extends BaseTest {
     public void shouldProcessThreedsTwoTransactionInConnectortestMode() {
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).inMode(mode)
                 .startWith().register().withCard(Card.MASTERCARD_1)
-                .then().debit().referringToNth(TransactionType.REGISTRATION).and().withResponseUrl().and().asThreeds()
-                .then().debit().referringToNth(TransactionType.REGISTRATION);
+                .then().debit().referringToNth(TransactionCode.REGISTERATION).and().withResponseUrl().and().asThreeds()
+                .then().debit().referringToNth(TransactionCode.REGISTERATION);
 
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
@@ -38,8 +38,8 @@ public class ConnectorModeTests extends BaseTest {
     public void shouldProcessScheduledThreedsTransaction() {
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).inMode(mode)
                 .startWith().register().withCard(Card.MASTERCARD_1)
-                .then().preauthorization().referringToNth(TransactionType.REGISTRATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1)
-                .then().schedule().referringToNth(TransactionType.REGISTRATION).withSchedule(TransactionType.PREAUTHORIZATION);
+                .then().preauthorization().referringToNth(TransactionCode.REGISTERATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1)
+                .then().schedule().referringToNth(TransactionCode.REGISTERATION).withSchedule(TransactionCode.PREAUTHORIZATION);
 
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();

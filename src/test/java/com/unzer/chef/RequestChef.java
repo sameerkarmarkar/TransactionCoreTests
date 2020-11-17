@@ -1,8 +1,9 @@
 package com.unzer.chef;
 
 import com.unzer.constants.Merchant;
+import com.unzer.constants.PaymentMethod;
 import com.unzer.constants.TransactionMode;
-import com.unzer.constants.TransactionType;
+import com.unzer.constants.TransactionCode;
 import com.unzer.util.RequestBuilder;
 import net.hpcsoft.adapter.payonxml.*;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -16,37 +17,37 @@ public class RequestChef {
 
     public static RequestType preauthorization(Merchant merchant, String amount, String curreny) {
         updateMerchantCredentials(merchant);
-        updateTransactionType(TransactionType.PREAUTHORIZATION);
+        updateTransactionType(TransactionCode.PREAUTHORIZATION);
         return requestType;
     }
 
-    public static RequestType preautorization(String amount, String currency, Merchant merchant) {
+    public static RequestType preautorization(String amount, String currency, Merchant merchant, PaymentMethod paymentMethod) {
         return RequestBuilder.newRequest()
                 .and().withSenderId(merchant.getSender())
                 .and().withDefaultTransactionInfo()
                 .and().withChannel(merchant.getChannel()).and().withUser(merchant.getUser(), merchant.getPassword())
                 .and().withAmountAndCurrency(amount, currency)
-                .and().withTransactionType(TransactionType.PREAUTHORIZATION)
+                .and().withTransactionType(paymentMethod, TransactionCode.PREAUTHORIZATION)
                 .build();
     }
 
-    public static RequestType capture(String amount, String currency) {
+    public static RequestType capture(String amount, String currency, PaymentMethod paymentMethod) {
         return RequestBuilder.newRequest()
                 .and().withSenderId(SENDER_ID)
                 .and().withDefaultTransactionInfo()
                 .and().withChannel(CHANNEL).and().withUser(USERNAME, PASSWORD)
                 .and().withAmountAndCurrency(amount, currency)
-                .and().withTransactionType(TransactionType.CAPTURE)
+                .and().withTransactionType(paymentMethod, TransactionCode.CAPTURE)
                 .build();
     }
 
-    public static RequestType reversal(String amount, String currency) {
+    public static RequestType reversal(String amount, String currency, PaymentMethod paymentMethod) {
         return RequestBuilder.newRequest()
                 .and().withSenderId(SENDER_ID)
                 .and().withDefaultTransactionInfo()
                 .and().withChannel(CHANNEL).and().withUser(USERNAME, PASSWORD)
                 .and().withAmountAndCurrency(amount, currency)
-                .and().withTransactionType(TransactionType.REFUND)
+                .and().withTransactionType(paymentMethod, TransactionCode.REFUND)
                 .build();
     }
 
@@ -85,15 +86,15 @@ public class RequestChef {
         return user;
     }
 
-    private static void updateTransactionType(TransactionType transactionType) {
+    private static void updateTransactionType(TransactionCode transactionCode) {
         TransactionRequestType transaction = requestType.getTransaction();
-        transaction.setPayment(paymentType(transactionType));
+        transaction.setPayment(paymentType(transactionCode));
         requestType.setTransaction(transaction);
     }
 
-    private static PaymentRequestType paymentType(TransactionType transactionType) {
+    private static PaymentRequestType paymentType(TransactionCode transactionCode) {
         PaymentRequestType paymentType = new PaymentRequestType();
-        paymentType.setCode(transactionType.getCode());
+        paymentType.setCode(transactionCode.getCode());
         return  paymentType;
     }
 

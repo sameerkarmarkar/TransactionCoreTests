@@ -3,7 +3,7 @@ package com.unzer.tests.creditcard.threeds;
 import com.unzer.constants.Card;
 import com.unzer.constants.Merchant;
 import com.unzer.constants.ThreedsVersion;
-import com.unzer.constants.TransactionType;
+import com.unzer.constants.TransactionCode;
 import com.unzer.util.Flow;
 import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ public class ThreedsOneTransactionsTest {
     public void shouldRejectTransactionWithoutCard() {
         Flow flow = Flow.forMerchant(merchant)
                 .startWith().register().withCard(Card.MASTERCARD_1)
-                .then().debit().referringToNth(TransactionType.REGISTRATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1);
+                .then().debit().referringToNth(TransactionCode.REGISTERATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1);
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
     }

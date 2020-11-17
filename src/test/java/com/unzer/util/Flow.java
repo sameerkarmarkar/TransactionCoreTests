@@ -79,12 +79,12 @@ public class Flow {
         return this;
     }
 
-    public Flow referringToNth(TransactionType type) {
+    public Flow referringToNth(TransactionCode type) {
         return referringToNth(type, 1);
     }
 
-    public Flow referringToNth(TransactionType type, Integer n) {
-        parentCode = type.getCode();
+    public Flow referringToNth(TransactionCode type, Integer n) {
+        parentCode = paymentMethod.getMethod() + "." + type.getCode();
         parentIndex = n - 1;
         return this;
     }
@@ -101,7 +101,7 @@ public class Flow {
         return this;
     }
 
-    public Flow withSchedule(TransactionType scheduledTransaction) {
+    public Flow withSchedule(TransactionCode scheduledTransaction) {
         request = RequestBuilder.newRequest(request).withSchedule(scheduledTransaction).build();
         return this;
     }

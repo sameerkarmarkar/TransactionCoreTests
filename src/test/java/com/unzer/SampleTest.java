@@ -2,7 +2,7 @@ package com.unzer;
 
 import com.unzer.constants.Card;
 import com.unzer.constants.Merchant;
-import com.unzer.constants.TransactionType;
+import com.unzer.constants.TransactionCode;
 import com.unzer.util.Flow;
 import lombok.SneakyThrows;
 
@@ -15,7 +15,7 @@ public class SampleTest {
 
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT)
                 .startWith().preauthorization().withCard(Card.MASTERCARD_1).withResponseUrl().asThreeds()
-                .then().capture().referringToNth(TransactionType.PREAUTHORIZATION);
+                .then().capture().referringToNth(TransactionCode.PREAUTHORIZATION);
 
         flow.execute();
 
