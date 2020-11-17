@@ -180,7 +180,7 @@ public class TestAcs {
         Map queryParameters = new HashMap<String, String>();
         queryParameters.put("PaRes", pares);
         queryParameters.put("MD",md);
-        Response response = RestAssured.given().relaxedHTTPSValidation().baseUri(termUrl)
+        Response response = RestAssured.given().log().all().relaxedHTTPSValidation().baseUri(termUrl)
                 .and().queryParams(queryParameters)
                 .when().post().then().log().all().and().extract().response();
 

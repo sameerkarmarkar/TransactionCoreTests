@@ -14,8 +14,11 @@ import java.util.stream.Collectors;
 public class Flow {
 
     private static final CoreClient coreClient = CoreClient.INSTANCE;
+    private static final Configuration conf = Configuration.INSTANCE;
+
     private RequestType request;
     private Merchant merchant;
+    private TransactionMode mode = TransactionMode.as(conf.getProperty("transaction.mode"));
     private boolean isThreeDs = false;
     private ThreedsVersion threeDsVersion;
     private PaymentMethod paymentMethod;
@@ -54,25 +57,25 @@ public class Flow {
 
     public Flow preauthorization() {
         savePrevious();
-        request = RequestBuilder.preauthorization(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.preauthorization(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
     public Flow capture() {
         savePrevious();
-        request = RequestBuilder.capture(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.capture(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
     public Flow debit() {
         savePrevious();
-        request = RequestBuilder.debit(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.debit(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
     public Flow refund() {
         savePrevious();
-        request = RequestBuilder.refund(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.refund(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
@@ -88,13 +91,13 @@ public class Flow {
 
     public Flow register() {
         savePrevious();
-        request = RequestBuilder.register(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.register(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
     public Flow schedule() {
         savePrevious();
-        request = RequestBuilder.schedule(merchant, PaymentMethod.CREDITCARD, "100", "EUR");
+        request = RequestBuilder.schedule(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
         return this;
     }
 
@@ -125,6 +128,11 @@ public class Flow {
     public Flow asThreeds(ThreedsVersion version) {
         this.isThreeDs = true;
         this.threeDsVersion = version;
+        return this;
+    }
+
+    public Flow inMode(TransactionMode mode) {
+        this.mode = mode;
         return this;
     }
 

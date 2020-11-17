@@ -1,9 +1,11 @@
 package com.unzer.util;
 
+import com.unzer.constants.TransactionType;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.StringUtils;
+import org.awaitility.core.Predicate;
 
 import java.sql.*;
 
@@ -13,25 +15,61 @@ import static org.hamcrest.Matchers.*;
 @Slf4j
 public class DatabaseHelper {
     private final static Configuration config = Configuration.INSTANCE;
-    private Connection conn;
+    private static Connection conn;
 
-    public static DatabaseHelper INSTANCE = new DatabaseHelper();
-
-    @SneakyThrows
-    private DatabaseHelper() {
-        OracleDataSource ods = new OracleDataSource();
-        ods.setDriverType("thin");
-        ods.setServerName(config.getProperty("db.host"));
-        ods.setPortNumber(Integer.valueOf(config.getProperty("db.port")));
-        ods.setServiceName(config.getProperty("db.sid"));
-        ods.setUser(config.getProperty("db.user"));
-        ods.setPassword(config.getProperty("db.password"));
-        conn = ods.getConnection();
-        log.info("Established connection with the database");
+    static {
+        if (conn == null) {
+            try {
+                OracleDataSource ods = new OracleDataSource();
+                ods.setDriverType("thin");
+                ods.setServerName(config.getProperty("db.host"));
+                ods.setPortNumber(Integer.valueOf(config.getProperty("db.port")));
+                ods.setServiceName(config.getProperty("db.sid"));
+                ods.setUser(config.getProperty("db.user"));
+                ods.setPassword(config.getProperty("db.password"));
+                conn = ods.getConnection();
+                log.info("Database connection successful");
+            } catch (SQLException sqlException) {
+                log.error("problems while connecting to database");
+            }
+        }
     }
 
     @SneakyThrows
-    public String getGiccMessage(String shortId) {
+    public static String getTransactionStatus(String shortId) {
+        String query = "Select ID_TXN_STATUS from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getTransactionResult(String shortId) {
+        String query = "Select ID_RESULT from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getInitiation(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_INITIATION from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getInitialSubsequent(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_INITIAL_SUBSEQUENT from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static boolean isScheduled(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_SCHEDULED from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
+        return Eventually.get(() -> executeAndGetResult(query)).equals("SCHEDULED");
+    }
+
+    @SneakyThrows
+    public static String getGiccMessage(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and STR_LOG like '%isomsg%'";
         String isoMessage = executeAndGetResult(query);
@@ -40,7 +78,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getDatabaseId(String shortId) {
+    public static String getDatabaseId(String shortId) {
         String query = "select id from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         String id = executeAndGetResult(query);
         if (id.isEmpty()) log.error("no record found for short id {}", shortId);
@@ -49,7 +87,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getEci(String shortId) {
+    public static String getEci(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_ECI from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String eci = executeAndGetResult(query);
@@ -58,7 +96,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getCavv(String shortId) {
+    public static String getCavv(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_VERIFICATION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String cavv = executeAndGetResult(query);
@@ -67,7 +105,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public String getDsTransId(String shortId) {
+    public static String getDsTransId(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_DS_TRANSACTION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
         String dsTransId = executeAndGetResult(query);
@@ -76,7 +114,20 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    private String executeAndGetResult(String query) {
+    public static String getScheduledTransactionShortId(String shortId) {
+        String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        String rootId = executeAndGetResult(query);
+        String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
+        return Eventually.get(() -> executeAndGetResult(query2), 120, 10);
+    }
+
+    public static String getTransactionType(String shortId) {
+        String query = "Select ID_TXN_TYPE from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    private static String executeAndGetResult(String query) {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         int numberOfRecords = 0;
@@ -97,5 +148,13 @@ public class DatabaseHelper {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         return rs;
+    }
+
+    @SneakyThrows
+    public static void closeConnection() {
+        if (conn != null && !conn.isClosed())
+            conn.close();
+        conn = null;
+        log.info("Closed the database connection and set conn to null");
     }
 }

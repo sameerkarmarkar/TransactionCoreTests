@@ -27,6 +27,11 @@ public class CronHelper {
         return new CronHelper();
     }
 
+    public CronHelper everyTenSeconds() {
+        secondsExpression.append("0/30");
+        return this;
+    }
+
     public CronHelper afterSeconds(int seconds) {
         currentUtcDate = currentUtcDate.plusSeconds(seconds);
         secondsExpression.append(currentUtcDate.getSecond()).append(",");
@@ -50,10 +55,13 @@ public class CronHelper {
     public String getExpression() {
         if (secondsExpression.length() == 0)
             secondsExpression.append("*");
-        else
-            secondsExpression.deleteCharAt(secondsExpression.lastIndexOf(","));;
+        else {
+            if (secondsExpression.toString().endsWith(","))
+                secondsExpression.deleteCharAt(secondsExpression.lastIndexOf(","));
+        }
 
-            if (minutesExpression.length() == 0)
+
+        if (minutesExpression.length() == 0)
             minutesExpression.append("*");
         if (hourExpression.length() == 0)
             hourExpression.append("*");

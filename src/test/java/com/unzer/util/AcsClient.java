@@ -2,9 +2,17 @@ package com.unzer.util;
 
 import com.unzer.constants.ThreedsVersion;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.ResponseType;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 public class AcsClient {
@@ -29,7 +37,7 @@ public class AcsClient {
     }
 
     private void processVersionOneAuthorization() {
-
+        sendPares(getPares(getSessionUrl()));
     }
 
     private void processVersionTwoAutorization() {
@@ -44,5 +52,74 @@ public class AcsClient {
 
         Response threedsResponse = RestOperations.get(demoUrl);
         log.info("Threeds authorization completed. response code->{}", threedsResponse.getStatusCode());
+    }
+
+    private String getSessionUrl() {
+        String termUrl = response.getTransaction().getProcessing().getRedirect().getParameter().get(0).getValue();
+        String md = response.getTransaction().getProcessing().getRedirect().getParameter().get(1).getValue();
+        String paReq = response.getTransaction().getProcessing().getRedirect().getParameter().get(2).getValue();
+
+        RequestSpecification spec = new RequestSpecBuilder()
+                .setBaseUri(THREEDS_ONE_ACS_URL)
+                .build();
+
+        Map parameters = new HashMap<String, String>();
+        parameters.put("PaReq", paReq);
+        parameters.put("TermUrl", termUrl);
+        parameters.put("MD", md);
+
+        Response response = RestOperations.post(spec, parameters);
+        Document document = Jsoup.parse(response.asString());
+        String sessionUrl = document.select("form#form").first().attr("action");
+        log.info("threeds one session url is {}", sessionUrl);
+        return sessionUrl;
+    }
+
+    private String getpassword(String sessionUrl) {
+        RequestSpecification acsReqSpec = new RequestSpecBuilder()
+                .setUrlEncodingEnabled(false)
+                .setBaseUri(sessionUrl)
+                .build();
+        Response response = RestOperations.get(acsReqSpec);
+        Document document = Jsoup.parse(response.asString());
+        return document.select("dt:contains(Personal) + dd").first().text();
+    }
+
+    private String getPares(String sessionUrl) {
+        String password = getpassword(sessionUrl);
+
+        Map parameters = new HashMap<String, String>();
+        parameters.put("password", password);
+        parameters.put("submit", "Submit");
+
+        RequestSpecification acsReqSpec = new RequestSpecBuilder()
+                .setUrlEncodingEnabled(false)
+                .setBaseUri(sessionUrl)
+                .build();
+
+        Response response = RestOperations.post(acsReqSpec, parameters);
+
+        String responseBody = response.asString();
+        Document document = Jsoup.parse(responseBody);
+        String pares = document.select("input[name='PaRes']").val();
+        log.info("threeds pares is {}", pares);
+        return pares;
+    }
+
+    private void sendPares(String pares) {
+        String termUrl = response.getTransaction().getProcessing().getRedirect().getParameter().get(0).getValue();
+        String md = response.getTransaction().getProcessing().getRedirect().getParameter().get(1).getValue();
+
+        RequestSpecification acsReqSpec = new RequestSpecBuilder()
+                .setBaseUri(termUrl)
+                .setUrlEncodingEnabled(true)
+                .build();
+
+        Map queryParameters = new HashMap<String, String>();
+        queryParameters.put("PaRes", pares);
+        queryParameters.put("MD", md);
+
+        Response response = RestOperations.postWithQueryParameters(acsReqSpec, queryParameters);
+        log.info("Threeds authorization completed. response code->{}", response.getStatusCode());
     }
 }

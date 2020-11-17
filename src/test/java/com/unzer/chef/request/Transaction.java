@@ -1,6 +1,6 @@
 package com.unzer.chef.request;
 
-import com.unzer.constants.TestMode;
+import com.unzer.constants.TransactionMode;
 import lombok.Data;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -14,7 +14,7 @@ import static com.unzer.constants.Constants.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Transaction {
     @XmlAttribute(name = "mode")
-    protected String mode = TestMode.CONNECTOR_TEST.name();
+    protected String mode = TransactionMode.CONNECTOR_TEST.name();
 
     @XmlAttribute(name = "response")
     protected String response = "SYNC";

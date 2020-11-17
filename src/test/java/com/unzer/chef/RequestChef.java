@@ -1,7 +1,7 @@
 package com.unzer.chef;
 
 import com.unzer.constants.Merchant;
-import com.unzer.constants.TestMode;
+import com.unzer.constants.TransactionMode;
 import com.unzer.constants.TransactionType;
 import com.unzer.util.RequestBuilder;
 import net.hpcsoft.adapter.payonxml.*;
@@ -54,7 +54,7 @@ public class RequestChef {
         RequestType requestType = new RequestType();
         requestType.setHeader(new HeaderType());
         TransactionRequestType transaction = new TransactionRequestType();
-        transaction.setMode(TestMode.INTEGRATOR_TEST.name());
+        transaction.setMode(TransactionMode.INTEGRATOR_TEST.name());
         transaction.setResponse("SYNC");
         transaction.setAccount(DataChef.requestAccountType());
         requestType.setTransaction(transaction);

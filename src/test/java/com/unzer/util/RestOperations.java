@@ -15,7 +15,6 @@ public class RestOperations {
     }
 
     public static Response sendPostRequest(String endpoint, Map<String, String> parameters) {
-        RestAssured.urlEncodingEnabled = false;
         RequestSpecification spec = new RequestSpecBuilder().setBaseUri(endpoint).build();
         return RestAssured.given().relaxedHTTPSValidation()
                 .log().all().and().spec(spec)
@@ -35,12 +34,36 @@ public class RestOperations {
                 .and().extract().response();
     }
 
+    public static Response post(RequestSpecification requestSpec, Map parameters) {
+        return RestAssured
+                .given().log().all()
+                .and().spec(requestSpec)
+                .and().formParams(parameters)
+                .when().post()
+                .then().log().all()
+                .and().extract().response();
+    }
+
+    public static Response postWithQueryParameters(RequestSpecification requestSpec, Map parameters) {
+        return RestAssured
+                .given().log().all().with().relaxedHTTPSValidation()
+                .and().spec(requestSpec)
+                .and().queryParams(parameters)
+                .when().post()
+                .then().log().all()
+                .and().extract().response();
+    }
+
     public static Response post(String url) {
         return RestAssured.given().log().all().relaxedHTTPSValidation().baseUri(url).when().get().then().log().all().and().extract().response();
     }
 
     public static Response get(String url) {
         return RestAssured.given().log().all().when().get(url).then().log().all().and().extract().response();
+    }
+
+    public static Response get(RequestSpecification spec) {
+        return RestAssured.given().log().all().and().spec(spec).when().get().then().log().all().and().extract().response();
     }
 
 
