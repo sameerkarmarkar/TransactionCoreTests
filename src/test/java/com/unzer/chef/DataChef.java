@@ -25,6 +25,14 @@ public class DataChef {
         return account;
     }
 
+    public static AccountRequestType requestAccountType(String accountHolder, String country, String brand) {
+        AccountRequestType account = new AccountRequestType();
+        account.setHolder(accountHolder);
+        account.setCountry(country);
+        account.setBrand(brand);
+        return account;
+    }
+
     public static ExpiryType expiryType() {
         ExpiryType expiry = new ExpiryType();
         expiry.setMonth("12");

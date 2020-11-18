@@ -10,16 +10,12 @@ public enum TransactionCode {
 
     private final String code;
 
-    private TransactionCode(String code) {
+    TransactionCode(String code) {
         this.code = code;
     }
 
     public String getCode() {
         return this.code;
     }
-
-    /*public String getSubCode() {
-        return this.getCode().split("\\.")[1];
-    }*/
 
 }

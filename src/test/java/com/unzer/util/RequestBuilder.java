@@ -241,6 +241,14 @@ public class RequestBuilder {
         return this;
     }
 
+    public RequestBuilder withAccountHolder(String accountHolder, String brand) {
+        TransactionRequestType transaction = requestType.getTransaction();
+        transaction.setAccount(requestAccountType(accountHolder, "DE", brand));
+        AuthenticationType auth = new AuthenticationType();
+        requestType.setTransaction(transaction);
+        return this;
+    }
+
     public RequestBuilder withResponseUrl() {
         TransactionRequestType transaction = requestType.getTransaction();
         FrontendType frontEndType = new FrontendType();
@@ -262,6 +270,16 @@ public class RequestBuilder {
         transaction.setAccount(account);
         transaction.setCustomer(null);
 
+        requestType.setTransaction(transaction);
+        return this;
+    }
+
+    public RequestBuilder referringTo(String parentTransactionId) {
+        TransactionRequestType transaction = requestType.getTransaction();
+        IdentificationRequestType identification = transaction.getIdentification() != null
+                ? transaction.getIdentification() : new IdentificationRequestType();
+        identification.setReferenceID(parentTransactionId);
+        transaction.setIdentification(identification);
         requestType.setTransaction(transaction);
         return this;
     }

@@ -7,7 +7,7 @@ public enum PaymentMethod {
 
     private final String method;
 
-    private PaymentMethod(String method) {
+    PaymentMethod(String method) {
         this.method = method;
     }
 

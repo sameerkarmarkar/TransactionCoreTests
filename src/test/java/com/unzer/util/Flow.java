@@ -26,6 +26,8 @@ public class Flow {
     private Integer id = 1;
     private String parentCode = StringUtils.EMPTY;
     private Integer parentIndex = -1;
+    private String parentTransactionId = StringUtils.EMPTY;
+    private boolean isContinuation = false;
 
     public static Flow forMerchant(Merchant merchant) {
         Flow flow = new Flow();
@@ -57,25 +59,25 @@ public class Flow {
 
     public Flow preauthorization() {
         savePrevious();
-        request = RequestBuilder.preauthorization(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.preauthorization(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
     public Flow capture() {
         savePrevious();
-        request = RequestBuilder.capture(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.capture(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
     public Flow debit() {
         savePrevious();
-        request = RequestBuilder.debit(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.debit(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
     public Flow refund() {
         savePrevious();
-        request = RequestBuilder.refund(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.refund(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
@@ -89,15 +91,20 @@ public class Flow {
         return this;
     }
 
+    public Flow referringToTransactionWithId(String parentUniqueId) {
+        this.parentTransactionId = parentUniqueId;
+        return this;
+    }
+
     public Flow register() {
         savePrevious();
-        request = RequestBuilder.register(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.register(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
     public Flow schedule() {
         savePrevious();
-        request = RequestBuilder.schedule(merchant, PaymentMethod.CREDITCARD, "100", "EUR", mode);
+        request = RequestBuilder.schedule(merchant, paymentMethod, "100", "EUR", mode);
         return this;
     }
 
@@ -113,6 +120,11 @@ public class Flow {
 
     public Flow withRecurringIndicator(Recurrence recurrence) {
         request = RequestBuilder.newRequest(request).withRecurrance(recurrence).build();
+        return this;
+    }
+
+    public Flow withAccountHolder(String accountHolder, String brand) {
+        request = RequestBuilder.newRequest(request).withAccountHolder(accountHolder, brand).build();
         return this;
     }
 
@@ -137,41 +149,62 @@ public class Flow {
     }
 
     private void savePrevious() {
-        if (request != null) {
+        if (request != null && !isContinuation) {
+            log.info("Saving transaction request to execution sequence");
             Executable executable = Executable.builder()
                     .request(request).parentCode(parentCode).parentIndex(parentIndex)
+                    .parentTransactionId(parentTransactionId)
                     .isThreeds(isThreeDs).threedsVersion(threeDsVersion).build();
             executionSequence.put(id, executable);
             parentCode = StringUtils.EMPTY;
             parentIndex = -1;
             isThreeDs = false;
             threeDsVersion = ThreedsVersion.NONE;
+            parentTransactionId = StringUtils.EMPTY;
             id++;
         }
+
+        isContinuation = false;
+    }
+
+    public Flow continueWith() {
+        isContinuation = true;
+        return this;
     }
 
     public void execute() {
         savePrevious();
         for (Map.Entry<Integer, Executable> entry: executionSequence.entrySet()) {
             Executable e = entry.getValue();
-            RequestType transaction = e.getRequest();
-            String parentCode = e.getParentCode();
-            if (!parentCode.isEmpty()) {
-                log.info("Building referenced payment");
-                ResponseType parentResponse = executionSequence.values().stream()
-                        .filter(t -> t.getRequest().getTransaction().getPayment().getCode().equals(parentCode))
-                        .filter(t -> t.isExecuted())
-                        .collect(Collectors.toList())
-                        .get(e.getParentIndex()).getResponse();
-                e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(parentResponse).build());
-            }
 
-            ResponseType response = coreClient.send(e.getRequest());
-            e.setResponse(response);
-            if (e.isThreeds())
-                handleThreeds(e);
-            e.setExecuted(true);
-            log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
+            if (!e.isExecuted()) {
+                RequestType transaction = e.getRequest();
+                String parentCode = e.getParentCode();
+                if (!parentCode.isEmpty()) {
+                    log.info("Building referenced payment");
+                    ResponseType parentResponse = executionSequence.values().stream()
+                            .filter(t -> t.getRequest().getTransaction().getPayment().getCode().equals(parentCode))
+                            .filter(t -> t.isExecuted())
+                            .collect(Collectors.toList())
+                            .get(e.getParentIndex()).getResponse();
+                    e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(parentResponse).build());
+                } else if (!e.getParentTransactionId().equals(StringUtils.EMPTY)) {
+                    e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(e.getParentTransactionId()).build());
+                }
+
+                ResponseType response = coreClient.send(e.getRequest());
+                e.setResponse(response);
+                if (e.isThreeds())
+                    handleThreeds(e);
+
+                if (e.getRequest().getTransaction().getPayment().getCode().contains(PaymentMethod.ONLINE_TRANSFER.getMethod()))
+                    OnlineTransferSimulator.authorizeOnlineTransfer(response);
+
+                e.setExecuted(true);
+                log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
+            } else {
+                log.info("transaction "+ e.getRequest().getTransaction().getPayment().getCode() + " already executed. Evaluating the next in the flow");
+            }
         }
     }
 

@@ -11,9 +11,6 @@ import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import javax.xml.namespace.QName;
-
 import java.util.stream.Stream;
 
 public class GiccProtocolTest extends BaseTest {
@@ -89,12 +86,12 @@ public class GiccProtocolTest extends BaseTest {
 
     private static Stream<Arguments> oneOffTransactions() {
         return Stream.of(
-                Arguments.of("One off preauth with Mstercard",
+                Arguments.of("One off preauth with Mastercard",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
                                 .startWith().preauthorization().withCard(Card.MASTERCARD_5).asThreeds().withResponseUrl()),
                 Arguments.of("One off preauth with Visa",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())
+                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                                .startWith().debit().withCard(Card.VISA_3).asThreeds().withResponseUrl())
         );
     }
 
