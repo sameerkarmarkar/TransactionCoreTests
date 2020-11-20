@@ -3,12 +3,11 @@ package com.unzer.constants;
 public enum PaymentMethod {
     CREDITCARD("CC"),
     INVOICE("IV"),
-    DEBITCARD("DB"),
-    ALTPAY("AL");
+    ONLINE_TRANSFER("OT");
 
     private final String method;
 
-    private PaymentMethod(String method) {
+    PaymentMethod(String method) {
         this.method = method;
     }
 

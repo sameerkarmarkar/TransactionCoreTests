@@ -11,15 +11,14 @@ import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import javax.xml.namespace.QName;
-
 import java.util.stream.Stream;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 public class GiccProtocolTest extends BaseTest {
 
     private static final GiccVerifier GICC_VERIFIER = GiccVerifier.INSTANCE;
-    private static final QName _Request_QNAME = new QName("", "Request");
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("oneOffTransactions")
@@ -42,6 +41,7 @@ public class GiccProtocolTest extends BaseTest {
         ResponseType parentResponse = flow.getParentResponse();
         String shortId = response.getTransaction().getIdentification().getShortID();
         String parentShortId = parentResponse.getTransaction().getIdentification().getShortID();
+        assertThat("Transaction was not successful", response.getTransaction().getProcessing().getReason().getValue(), equalTo("SUCCESSFULL"));
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(cardBrand, parentShortId);
     }
 
@@ -49,11 +49,12 @@ public class GiccProtocolTest extends BaseTest {
     @MethodSource("cards")
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForUnscheduledInitialRecurringTransaction(Card card, Merchant merchant) {
-        Flow flow = Flow.forMerchant(merchant)
+        Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
-                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds();
+                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds();
         flow.execute();
-
+        ResponseType response = flow.getLastTransactionResponse();
+        assertThat("Transaction was not successful", response.getTransaction().getProcessing().getReason().getValue(), equalTo("Transaction Pending"));
         String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
         GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
     }
@@ -62,10 +63,10 @@ public class GiccProtocolTest extends BaseTest {
     @MethodSource("cards")
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForUnscheduledRepeatedRecurringTransaction(Card card, Merchant merchant) {
-        Flow flow = Flow.forMerchant(merchant)
+        Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
-                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds()
-                .then().debit().withResponseUrl().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.REPEATED);
+                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds()
+                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.REPEATED);
         flow.execute();
 
         String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
@@ -77,10 +78,10 @@ public class GiccProtocolTest extends BaseTest {
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForSubsequentScheduledThreedsTwoTransaction(Card card, Merchant merchant) {
 
-        Flow flow = Flow.forMerchant(merchant)
+        Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
-                .then().debit().referringToNth(TransactionType.REGISTRATION).and().withRecurringIndicator(Recurrence.INITIAL).withResponseUrl().and().asThreeds()
-                .then().schedule().withSchedule(TransactionType.DEBIT).referringToNth(TransactionType.REGISTRATION);
+                .then().debit().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).withResponseUrl().and().asThreeds()
+                .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);
         flow.execute();
 
         String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
@@ -90,20 +91,28 @@ public class GiccProtocolTest extends BaseTest {
 
     private static Stream<Arguments> oneOffTransactions() {
         return Stream.of(
-                Arguments.of("One off preauth with Mstercard",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().preauthorization().withCard(Card.MASTERCARD_5).asThreeds().withResponseUrl()),
+                Arguments.of("One off preauth with Mastercard",
+                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                                .startWith().preauthorization().withCard(Card.MASTERCARD_5).asThreeds().withResponseUrl()),
                 Arguments.of("One off preauth with Visa",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())
+                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                                .startWith().debit().withCard(Card.VISA_3).asThreeds().withResponseUrl())
         );
     }
 
     private static Stream<Arguments> returningCustomer() {
         return Stream.of(
-                Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).startWith().debit().withCard(Card.MASTERCARD_2).asThreeds().withResponseUrl()
-                        .then().refund().referringToNth(TransactionType.DEBIT), "MASTER"),
-                Arguments.of("REGISTER >> DEBIT >> REFUND with VISA", Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT).startWith().register().withCard(Card.VISA_2)
-                        .then().debit().referringToNth(TransactionType.REGISTRATION).asThreeds().withResponseUrl()
-                        .then().refund().referringToNth(TransactionType.DEBIT), "VISA")
+                Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                        .startWith().debit().withCard(Card.MASTERCARD_2).asThreeds().withResponseUrl()
+                        .then().refund().referringToNth(TransactionCode.DEBIT), "MASTER"),
+                Arguments.of("REGISTER >> DEBIT >> REFUND with VISA", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                        .startWith().register().withCard(Card.MASTERCARD_1)
+                        .then().debit().referringToNth(TransactionCode.REGISTERATION).asThreeds().withResponseUrl()
+                        .then().refund().referringToNth(TransactionCode.DEBIT), "MASTER"),
+                Arguments.of("PREAUTH >> CAPTURE >> REFUND with VISA", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                        .startWith().preauthorization().withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()
+                        .then().capture().referringToNth(TransactionCode.PREAUTHORIZATION)
+                        .then().refund().referringToNth(TransactionCode.CAPTURE), "MASTER")
         );
     }
 

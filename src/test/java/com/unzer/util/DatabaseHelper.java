@@ -1,16 +1,13 @@
 package com.unzer.util;
 
-import com.unzer.constants.TransactionType;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.StringUtils;
-import org.awaitility.core.Predicate;
 
 import java.sql.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 @Slf4j
 public class DatabaseHelper {
@@ -69,9 +66,9 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public static String getGiccMessage(String shortId) {
+    public static String getMessageSentToConnector(String shortId) {
         String databaseId = getDatabaseId(shortId);
-        String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and STR_LOG like '%isomsg%'";
+        String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '21'";
         String isoMessage = executeAndGetResult(query);
         if (isoMessage.isEmpty()) log.warn("no isoMessage found for short id {}", shortId);
         return isoMessage;
@@ -119,6 +116,14 @@ public class DatabaseHelper {
         String rootId = executeAndGetResult(query);
         String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
         return Eventually.get(() -> executeAndGetResult(query2), 120, 10);
+    }
+
+    @SneakyThrows
+    public static String getImplicitTransactionUniqueId(String shortId, String transactionType) {
+        String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        String rootId = executeAndGetResult(query);
+        String query2 = "Select STR_LONG_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_TYPE = '"+ transactionType +"'";
+        return Eventually.get(() -> executeAndGetResult(query2), 10, 1);
     }
 
     public static String getTransactionType(String shortId) {

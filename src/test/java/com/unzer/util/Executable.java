@@ -18,5 +18,6 @@ public class Executable {
     private Integer parentIndex;
     private boolean isThreeds = false;
     private ThreedsVersion threedsVersion;
-
+    private String parentTransactionId;
+    private Boolean shouldFail = false;
 }

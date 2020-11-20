@@ -2,20 +2,30 @@ package com.unzer;
 
 import com.unzer.constants.Card;
 import com.unzer.constants.Merchant;
-import com.unzer.constants.TransactionType;
+import com.unzer.constants.TransactionCode;
 import com.unzer.util.Flow;
 import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
 public class SampleTest {
+
+    public static void main(String[] args) {
+        String usage = "cbG6RCVYc9";
+        String temp = "POST https://testapi.girogate.de\nreturnmode=urlencodeext&txtype=REFUND&login=heidelpaytest&password=******&contractid=HEIDELPAYTESTCONTRACT&reftxid=780115305&currency=EUR&amount=10000&merchantrefundid=31HA07BC8102BB4872635201DAD43E00&specin.dynamicdescriptor=4697.1****8417+iDEAL-Ppro+cbG6RCVYc9";
+        Boolean test = Pattern.compile("dynamicdescriptor=.*"+usage)
+                .matcher(temp).find();
+        System.out.println(test);
+    }
     @Test
     @SneakyThrows
     public void sampleTest() {
 
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT)
                 .startWith().preauthorization().withCard(Card.MASTERCARD_1).withResponseUrl().asThreeds()
-                .then().capture().referringToNth(TransactionType.PREAUTHORIZATION);
+                .then().capture().referringToNth(TransactionCode.PREAUTHORIZATION);
 
         flow.execute();
 
