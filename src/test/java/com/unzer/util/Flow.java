@@ -6,9 +6,14 @@ import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 @Slf4j
 public class Flow {
@@ -28,6 +33,8 @@ public class Flow {
     private Integer parentIndex = -1;
     private String parentTransactionId = StringUtils.EMPTY;
     private boolean isContinuation = false;
+    private PaymentNetworkProvider pnp;
+    private Boolean shouldFail = false;
 
     public static Flow forMerchant(Merchant merchant) {
         Flow flow = new Flow();
@@ -128,8 +135,23 @@ public class Flow {
         return this;
     }
 
+    public Flow withPaymentNetwork(PaymentNetworkProvider pnp) {
+        this.pnp = pnp;
+        return this;
+    }
+
+    public Flow withBankAccount(String iban, String bic) {
+        request = RequestBuilder.newRequest(request).withBankAccount(iban, bic).build();
+        return this;
+    }
+
     public Flow withResponseUrl() {
         request = RequestBuilder.newRequest(request).withResponseUrl().build();
+        return this;
+    }
+
+    public Flow withAmount(String amount) {
+        request = RequestBuilder.newRequest(request).withAmount(amount).build();
         return this;
     }
 
@@ -148,19 +170,28 @@ public class Flow {
         return this;
     }
 
+    public Flow rejected() {
+        this.shouldFail = true;
+        return this;
+    }
+
+
     private void savePrevious() {
         if (request != null && !isContinuation) {
             log.info("Saving transaction request to execution sequence");
             Executable executable = Executable.builder()
                     .request(request).parentCode(parentCode).parentIndex(parentIndex)
                     .parentTransactionId(parentTransactionId)
-                    .isThreeds(isThreeDs).threedsVersion(threeDsVersion).build();
+                    .isThreeds(isThreeDs).threedsVersion(threeDsVersion)
+                    .shouldFail(shouldFail)
+                    .build();
             executionSequence.put(id, executable);
             parentCode = StringUtils.EMPTY;
             parentIndex = -1;
             isThreeDs = false;
             threeDsVersion = ThreedsVersion.NONE;
             parentTransactionId = StringUtils.EMPTY;
+            shouldFail = false;
             id++;
         }
 
@@ -179,26 +210,17 @@ public class Flow {
 
             if (!e.isExecuted()) {
                 RequestType transaction = e.getRequest();
-                String parentCode = e.getParentCode();
-                if (!parentCode.isEmpty()) {
-                    log.info("Building referenced payment");
-                    ResponseType parentResponse = executionSequence.values().stream()
-                            .filter(t -> t.getRequest().getTransaction().getPayment().getCode().equals(parentCode))
-                            .filter(t -> t.isExecuted())
-                            .collect(Collectors.toList())
-                            .get(e.getParentIndex()).getResponse();
-                    e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(parentResponse).build());
-                } else if (!e.getParentTransactionId().equals(StringUtils.EMPTY)) {
-                    e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(e.getParentTransactionId()).build());
-                }
-
+                updateParentTransactionInformation(e);
                 ResponseType response = coreClient.send(e.getRequest());
-                e.setResponse(response);
-                if (e.isThreeds())
-                    handleThreeds(e);
 
-                if (e.getRequest().getTransaction().getPayment().getCode().contains(PaymentMethod.ONLINE_TRANSFER.getMethod()))
-                    OnlineTransferSimulator.authorizeOnlineTransfer(response);
+                if (e.getShouldFail())
+                    assertThat("Transaction response was ACK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.NOK.name()));
+                else
+                    assertThat("Transaction response was NOK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.ACK.name()));
+
+                e.setResponse(response);
+
+                handleExternalauthorization(e);
 
                 e.setExecuted(true);
                 log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
@@ -206,6 +228,47 @@ public class Flow {
                 log.info("transaction "+ e.getRequest().getTransaction().getPayment().getCode() + " already executed. Evaluating the next in the flow");
             }
         }
+    }
+
+    private void updateParentTransactionInformation(Executable e) {
+        if (!e.getParentCode().isEmpty()) {
+            log.info("Building referenced payment");
+            ResponseType parentResponse = executionSequence.values().stream()
+                    .filter(t -> t.getRequest().getTransaction().getPayment().getCode().equals(e.getParentCode()))
+                    .filter(t -> t.isExecuted())
+                    .collect(Collectors.toList())
+                    .get(e.getParentIndex()).getResponse();
+            e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(parentResponse).build());
+        } else if (!e.getParentTransactionId().equals(StringUtils.EMPTY)) {
+            e.setRequest(RequestBuilder.newRequest(e.getRequest()).referringTo(e.getParentTransactionId()).build());
+        }
+    }
+
+    private void handleExternalauthorization(Executable e) {
+        switch (paymentMethod) {
+            case CREDITCARD:
+                handleCreditCardAuthorization(e);
+                break;
+
+            case ONLINE_TRANSFER:
+                handleOnlineTransferAuthorization(e);
+                break;
+
+            default:
+                log.info("No external authorization needed");
+
+        }
+
+    }
+
+    private void handleCreditCardAuthorization(Executable e) {
+        if (e.isThreeds())
+            handleThreeds(e);
+    }
+
+    private void handleOnlineTransferAuthorization(Executable e) {
+        if (e.getRequest().getTransaction().getPayment().getCode().contains(PaymentMethod.ONLINE_TRANSFER.getMethod()))
+            OnlineTransferSimulator.authorizeOnlineTransfer(e.getResponse(),pnp);
     }
 
     public ResponseType getLastTransactionResponse() {
@@ -231,13 +294,14 @@ public class Flow {
         AcsClient.forVersion(e.getThreedsVersion()).processThreedsAuthorization(e.getResponse());
     }
 
-    public void getExecutedTransactions() {
+    public List<RequestType> getExecutedTransactions() {
+        List executedTransactions = new ArrayList<RequestType>();
         for (Map.Entry<Integer, Executable> entry: executionSequence.entrySet()) {
-            RequestType transaction = entry.getValue().getRequest();
-            log.info("Transaction id-->{}   Transaction type-->{}   executed-->{}", entry.getKey(),
-                    transaction.getTransaction().getPayment().getCode(), entry.getValue().isExecuted());
-            entry.getValue().setExecuted(true);
+            if (entry.getValue().isExecuted())
+                executedTransactions.add(entry.getValue().getRequest());
         }
+        log.info("returning list of executed requests");
+        return executedTransactions;
     }
 
 

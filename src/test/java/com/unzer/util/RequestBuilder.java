@@ -249,6 +249,16 @@ public class RequestBuilder {
         return this;
     }
 
+    public RequestBuilder withBankAccount(String iban, String bic) {
+        TransactionRequestType transaction = requestType.getTransaction();
+        AccountRequestType account = transaction.getAccount() != null ? transaction.getAccount() : new AccountRequestType();
+        account.setIban(iban);
+        account.setBic(bic);
+        transaction.setAccount(account);
+        requestType.setTransaction(transaction);
+        return this;
+    }
+
     public RequestBuilder withResponseUrl() {
         TransactionRequestType transaction = requestType.getTransaction();
         FrontendType frontEndType = new FrontendType();

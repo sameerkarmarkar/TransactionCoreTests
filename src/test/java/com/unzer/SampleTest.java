@@ -8,7 +8,17 @@ import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
 public class SampleTest {
+
+    public static void main(String[] args) {
+        String usage = "cbG6RCVYc9";
+        String temp = "POST https://testapi.girogate.de\nreturnmode=urlencodeext&txtype=REFUND&login=heidelpaytest&password=******&contractid=HEIDELPAYTESTCONTRACT&reftxid=780115305&currency=EUR&amount=10000&merchantrefundid=31HA07BC8102BB4872635201DAD43E00&specin.dynamicdescriptor=4697.1****8417+iDEAL-Ppro+cbG6RCVYc9";
+        Boolean test = Pattern.compile("dynamicdescriptor=.*"+usage)
+                .matcher(temp).find();
+        System.out.println(test);
+    }
     @Test
     @SneakyThrows
     public void sampleTest() {

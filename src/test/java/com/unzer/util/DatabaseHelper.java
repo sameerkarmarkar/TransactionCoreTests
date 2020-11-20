@@ -66,7 +66,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public static String getGiccMessage(String shortId) {
+    public static String getMessageSentToConnector(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '21'";
         String isoMessage = executeAndGetResult(query);

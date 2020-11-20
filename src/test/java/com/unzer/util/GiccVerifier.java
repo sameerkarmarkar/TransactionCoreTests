@@ -30,7 +30,7 @@ public class GiccVerifier {
 
     @SneakyThrows
     public GiccVerifier getMessage() {
-        String giccMessage = DatabaseHelper.getGiccMessage(shortId);
+        String giccMessage = DatabaseHelper.getMessageSentToConnector(shortId);
         JAXBContext jaxbContext = JAXBContext.newInstance(GiccMessage.class);
 
         InputStream stream = new ByteArrayInputStream(giccMessage.getBytes("UTF-8"));
@@ -82,7 +82,7 @@ public class GiccVerifier {
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
                 () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
-                () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo(getExpected6040(brand, parentShortId))),
+                () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), is(emptyOrNullString())),
