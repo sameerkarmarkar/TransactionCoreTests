@@ -46,13 +46,16 @@ public class PproRefundTest extends BaseTest {
         flow.execute();
 
         String receiptUniqueId = DatabaseHelper.getImplicitTransactionUniqueId(flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID(), "REC");
-        flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId).withAmount("10");
 
+        flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId).withAmount("10");
         flow.execute();
         verifyRefundResponse(flow);
 
         flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId).withAmount("20");
+        flow.execute();
+        verifyRefundResponse(flow);
 
+        flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId).withAmount("20");
         flow.execute();
         verifyRefundResponse(flow);
     }
