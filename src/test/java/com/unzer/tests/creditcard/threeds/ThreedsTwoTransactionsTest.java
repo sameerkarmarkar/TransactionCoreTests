@@ -2,6 +2,7 @@ package com.unzer.tests.creditcard.threeds;
 
 import com.unzer.constants.Card;
 import com.unzer.constants.Merchant;
+import com.unzer.constants.PaymentMethod;
 import com.unzer.constants.TransactionCode;
 import com.unzer.util.Flow;
 import net.hpcsoft.adapter.payonxml.ResponseType;
@@ -14,7 +15,7 @@ public class ThreedsTwoTransactionsTest {
 
     @Test
     public void shouldRejectTransactionWithoutCard() {
-        Flow flow = Flow.forMerchant(merchant)
+        Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().debit().referringToNth(TransactionCode.REGISTERATION).withResponseUrl().asThreeds();
         flow.execute();
