@@ -1,6 +1,7 @@
 package com.unzer.util;
 
 import com.unzer.constants.*;
+import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
@@ -203,6 +204,7 @@ public class Flow {
         return this;
     }
 
+    @Step
     public void execute() {
         savePrevious();
         for (Map.Entry<Integer, Executable> entry: executionSequence.entrySet()) {

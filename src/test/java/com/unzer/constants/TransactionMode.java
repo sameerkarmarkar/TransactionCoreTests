@@ -7,4 +7,5 @@ public enum TransactionMode {
     public static TransactionMode as(String testMode) {
         return TransactionMode.valueOf(testMode);
     }
+
 }

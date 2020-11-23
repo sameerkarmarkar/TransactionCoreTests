@@ -69,7 +69,7 @@ public class DatabaseHelper {
     public static String getMessageSentToConnector(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '21'";
-        String isoMessage = executeAndGetResult(query);
+        String isoMessage = Eventually.get(() -> executeAndGetResult(query), 10, 1);;
         if (isoMessage.isEmpty()) log.warn("no isoMessage found for short id {}", shortId);
         return isoMessage;
     }
@@ -77,7 +77,7 @@ public class DatabaseHelper {
     @SneakyThrows
     public static String getDatabaseId(String shortId) {
         String query = "select id from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
-        String id = executeAndGetResult(query);
+        String id = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         if (id.isEmpty()) log.error("no record found for short id {}", shortId);
         return id;
 
@@ -87,7 +87,7 @@ public class DatabaseHelper {
     public static String getEci(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_ECI from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
-        String eci = executeAndGetResult(query);
+        String eci = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         if (eci.isEmpty()) log.warn("no eci found for short id {}", shortId);
         return eci;
     }
@@ -96,7 +96,7 @@ public class DatabaseHelper {
     public static String getCavv(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_VERIFICATION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
-        String cavv = executeAndGetResult(query);
+        String cavv = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         if (cavv.isEmpty()) log.warn("no cavv found for short id {}", shortId);
         return cavv;
     }
@@ -105,7 +105,7 @@ public class DatabaseHelper {
     public static String getDsTransId(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_DS_TRANSACTION_ID from HPC.HPC_TXNS_3DSEC where id ='"+databaseId+"'";
-        String dsTransId = executeAndGetResult(query);
+        String dsTransId = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         if (dsTransId.isEmpty()) log.warn("no dsTransId found for short id {}", shortId);
         return dsTransId;
     }
@@ -113,7 +113,7 @@ public class DatabaseHelper {
     @SneakyThrows
     public static String getScheduledTransactionShortId(String shortId) {
         String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
-        String rootId = executeAndGetResult(query);
+        String rootId = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         String query2 = "Select STR_SHORT_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_SOURCE_TYPE = 'SCH'";
         return Eventually.get(() -> executeAndGetResult(query2), 120, 10);
     }
@@ -121,7 +121,7 @@ public class DatabaseHelper {
     @SneakyThrows
     public static String getImplicitTransactionUniqueId(String shortId, String transactionType) {
         String query = "Select ID_ROOT_TXN from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
-        String rootId = executeAndGetResult(query);
+        String rootId = Eventually.get(() -> executeAndGetResult(query), 10, 1);
         String query2 = "Select STR_LONG_ID from HPC.HPC_TXNS where ID_ROOT_TXN = '"+rootId+"' and ID_TXN_TYPE = '"+ transactionType +"'";
         return Eventually.get(() -> executeAndGetResult(query2), 10, 1);
     }

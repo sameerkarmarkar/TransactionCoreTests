@@ -93,10 +93,10 @@ public class GiccProtocolTest extends BaseTest {
         return Stream.of(
                 Arguments.of("One off preauth with Mastercard",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().preauthorization().withCard(Card.MASTERCARD_5).asThreeds().withResponseUrl()),
-                Arguments.of("One off preauth with Visa",
-                        Flow.forMerchant(Merchant.POSTBANK_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().debit().withCard(Card.VISA_3).asThreeds().withResponseUrl())
+                                .startWith().preauthorization().withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()),
+                Arguments.of("One off debit with Visa",
+                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+                                .startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())
         );
     }
 
