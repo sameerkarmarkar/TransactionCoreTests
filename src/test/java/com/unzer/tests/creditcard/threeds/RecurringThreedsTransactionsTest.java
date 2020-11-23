@@ -16,7 +16,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class RecurringThreedsTransactions extends BaseTest {
+public class RecurringThreedsTransactionsTest extends BaseTest {
 
     @Test
     public void shouldKeepTheTransactionPendingWhenThreedsAuthorizationIsNotCompleted() {
@@ -102,15 +102,7 @@ public class RecurringThreedsTransactions extends BaseTest {
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
         verifyTransactionResponse(response);
-        /*assertAll(
-                () -> assertThat("Invalid transaction status", response.getTransaction().getProcessing().getStatus().getCode(), equalTo("90")),
-                () -> assertThat("Invalid transaction status", response.getTransaction().getProcessing().getStatus().getValue(), equalTo("NEW")),
-                () -> assertThat("Invalid transaction status", response.getTransaction().getProcessing().getReason().getCode(), equalTo("00")),
-                () -> assertThat("Invalid transaction status", response.getTransaction().getProcessing().getReason().getValue(), equalTo("SUCCESSFULL")),
-                () -> assertThat("Invalid transaction status", response.getTransaction().getProcessing().getReason().getValue(), equalTo("SUCCESSFULL")),
-                () -> assertThat("Invalid transaction status", DatabaseHelper.getTransactionStatus(response.getTransaction().getIdentification().getShortID()), equalTo("90"))
-        );
-*/
+
         String scheduledTransactionId = DatabaseHelper.getScheduledTransactionShortId(response.getTransaction().getIdentification().getShortID());
         assertThat("Scheduled transaction was unsuccessful", DatabaseHelper.getTransactionStatus(scheduledTransactionId), equalTo("70"));
     }
@@ -171,23 +163,5 @@ public class RecurringThreedsTransactions extends BaseTest {
 
                 );
     }
-
-    private static Stream<Arguments> scheduledRecurringFlows() {
-        return Stream.of(
-                /*Arguments.of("Threeds Version One flow: REG >> PREAUTH >> SCHEDULE (PREAUTH)",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().register().withCard(Card.MASTERCARD_1)
-                                .then().preauthorization().referringToNth(TransactionCode.REGISTERATION)
-                                .and().withResponseUrl().asThreeds(ThreedsVersion.VERSION_1).withRecurringIndicator(Recurrence.INITIAL)
-                                .then().schedule().withSchedule(TransactionCode.PREAUTHORIZATION).referringToNth(TransactionCode.REGISTERATION), "RES"),*/
-                Arguments.of("Threeds version two flow: REG >> DEBIT >> SCHEDULE (DEBIT)",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().register().withCard(Card.MASTERCARD_1)
-                                .then().debit().referringToNth(TransactionCode.REGISTERATION)
-                                .and().withResponseUrl().and().asThreeds()
-                                .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION), "DEB")
-        );
-    }
-
 
 }
