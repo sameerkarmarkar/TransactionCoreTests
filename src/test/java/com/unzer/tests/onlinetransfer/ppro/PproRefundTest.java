@@ -1,4 +1,4 @@
-package com.unzer.tests.ppro;
+package com.unzer.tests.onlinetransfer.ppro;
 
 import com.unzer.constants.Merchant;
 import com.unzer.constants.PaymentNetworkProvider;
@@ -23,11 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 @Tag("HPCTXNCORE-1934")
 @Slf4j
 public class PproRefundTest extends BaseTest {
-    private static final TransactionMode mode = TransactionMode.CONNECTOR_TEST;
-
     @Test
     public void shouldSendUsageAsDynamicDescriptorInFullRefund() {
-        Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT)
                 .withPaymentMethod(ONLINE_TRANSFER).withPaymentNetwork(PaymentNetworkProvider.PPRO)
                 .startWith().preauthorization().withAccountHolder("Test Account", "ALIPAY");
 
@@ -43,7 +41,7 @@ public class PproRefundTest extends BaseTest {
 
     @Test
     public void shouldSendUsageAsDynamicDescriptorInPartialRefund() {
-        Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT)
                 .withPaymentMethod(ONLINE_TRANSFER).withPaymentNetwork(PaymentNetworkProvider.PPRO)
                 .startWith().preauthorization().withAccountHolder("Test Account", "ALIPAY").withAmount("50");
 
@@ -66,7 +64,7 @@ public class PproRefundTest extends BaseTest {
 
     @Test
     public void shouldNotSendUsageAsDynamicDescriptorInSofortRefund() {
-        Flow flow = Flow.forMerchant(Merchant.SOFORT_ONLINE_TRANSFER_MERCHANT).inMode(mode)
+        Flow flow = Flow.forMerchant(Merchant.SOFORT_ONLINE_TRANSFER_MERCHANT)
                 .withPaymentMethod(ONLINE_TRANSFER).withPaymentNetwork(PaymentNetworkProvider.SOFORT)
                 .startWith().preauthorization().withAccountHolder("Test Account", "SOFORT")
                 .withResponseUrl().withAmount("50");

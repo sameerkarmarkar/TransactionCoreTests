@@ -3,6 +3,7 @@ package com.unzer.util;
 import com.unzer.constants.Card;
 import com.unzer.domain.GiccField;
 import com.unzer.domain.GiccMessage;
+import io.qameta.allure.Step;
 import lombok.SneakyThrows;
 
 import javax.xml.bind.JAXBContext;
@@ -14,6 +15,7 @@ import java.util.NoSuchElementException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GiccVerifier {
 
@@ -62,7 +64,21 @@ public class GiccVerifier {
         return message.getField().stream().filter(f -> f.getId().trim().equals(fieldId)).count() > 0;
     }
 
+    public void verifyMandatoryFields() {
+        assertAll(
+                () -> assertThat("Field 11 is missing from message", isFieldPresent("11")),
+                () -> assertThat("Field 12 is missing from message", isFieldPresent("12")),
+                () -> assertThat("Field 13 is missing from message", isFieldPresent("13")),
+                () -> assertThat("Field 41 is missing from message", isFieldPresent("41")),
+                () -> assertThat("Field 42 is missing from message", isFieldPresent("42")),
+                () -> assertThat("Field 46 is missing from message", isFieldPresent("46")),
+                () -> assertThat("Field 57 is missing from message", isFieldPresent("57"))
+        );
+    }
+
+    @Step
     public void verifyFieldsForOneOff(String brand) {
+        verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("812")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
@@ -77,7 +93,9 @@ public class GiccVerifier {
         );
     }
 
+    @Step
     public void verifyFieldsForReturningCustomer(String brand, String parentShortId) {
+        verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
@@ -92,7 +110,9 @@ public class GiccVerifier {
         );
     }
 
+    @Step
     public void verifyFieldsForUnscheduledInitialRecurring(String brand) {
+        verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("812")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
@@ -109,7 +129,9 @@ public class GiccVerifier {
         );
     }
 
+    @Step
     public void verifyFieldsForUnscheduledSubsequentRecurring(String brand) {
+        verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
@@ -125,7 +147,9 @@ public class GiccVerifier {
         );
     }
 
+    @Step
     public void verifyFieldsForScheduledSubsequentRecurring(String brand) {
+        verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
                 () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
