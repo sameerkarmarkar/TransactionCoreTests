@@ -1,8 +1,9 @@
 package com.unzer.util;
 
+import com.unzer.clients.AcsClient;
+import com.unzer.clients.CoreClient;
+import com.unzer.clients.OnlineTransferSimulator;
 import com.unzer.constants.*;
-import io.qameta.allure.Attachment;
-import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
@@ -214,18 +215,17 @@ public class Flow {
                 RequestType transaction = e.getRequest();
                 updateParentTransactionInformation(e);
                 ResponseType response = coreClient.send(e.getRequest());
+                e.setResponse(response);
+                e.setExecuted(true);
+                log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
 
                 if (e.getShouldFail())
                     assertThat("Transaction response was ACK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.NOK.name()));
-                else
+                else {
                     assertThat("Transaction response was NOK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.ACK.name()));
+                    handleExternalauthorization(e);
+                }
 
-                e.setResponse(response);
-
-                handleExternalauthorization(e);
-
-                e.setExecuted(true);
-                log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
             } else {
                 log.info("transaction "+ e.getRequest().getTransaction().getPayment().getCode() + " already executed. Evaluating the next in the flow");
             }

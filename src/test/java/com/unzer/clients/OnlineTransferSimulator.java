@@ -1,4 +1,4 @@
-package com.unzer.util;
+package com.unzer.clients;
 
 import com.unzer.constants.PaymentNetworkProvider;
 import com.unzer.constants.TransactionCode;

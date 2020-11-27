@@ -1,8 +1,9 @@
-package com.unzer.util;
+package com.unzer.verifiers;
 
 import com.unzer.constants.Card;
 import com.unzer.domain.GiccField;
 import com.unzer.domain.GiccMessage;
+import com.unzer.helpers.DatabaseHelper;
 import io.qameta.allure.Step;
 import lombok.SneakyThrows;
 
@@ -110,6 +111,7 @@ public class GiccVerifier {
         );
     }
 
+    //TODO: Change the verification for 60.41 once initial recurring and one off can be distinguished
     @Step
     public void verifyFieldsForUnscheduledInitialRecurring(String brand) {
         verifyMandatoryFields();
@@ -119,7 +121,8 @@ public class GiccVerifier {
                 () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"),
                         brand.equals(Card.VISA_1.getCardBrand()) ? equalTo("10") : equalTo("11")),
-                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo(brand.equals(Card.MASTERCARD_1.getCardBrand()) ? "06" : "01")),
+                //() -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo(brand.equals(Card.MASTERCARD_1.getCardBrand()) ? "06" : "01")),
+                () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.54", getSubFieldValue("60","54"), is(emptyOrNullString())),
                 () -> assertThat("invalid value for field 60.62", getSubFieldValue("60","62"), equalTo(getExpected6062(brand))),
@@ -134,8 +137,8 @@ public class GiccVerifier {
         verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
-                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
-                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
+                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(true)),
+                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(true)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(equalTo(brand.equals(Card.MASTERCARD_1.getCardBrand()) ? "02" : "05"))),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
@@ -152,8 +155,8 @@ public class GiccVerifier {
         verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
-                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(false)),
-                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(false)),
+                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(true)),
+                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(true)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo("02")),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),

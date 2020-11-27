@@ -1,5 +1,6 @@
-package com.unzer.util;
+package com.unzer.clients;
 
+import com.unzer.util.Configuration;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.SneakyThrows;

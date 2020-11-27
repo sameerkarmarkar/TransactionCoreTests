@@ -2,9 +2,8 @@ package com.unzer.tests.onlinetransfer.ppro;
 
 import com.unzer.constants.Merchant;
 import com.unzer.constants.PaymentNetworkProvider;
-import com.unzer.constants.TransactionMode;
 import com.unzer.tests.BaseTest;
-import com.unzer.util.DatabaseHelper;
+import com.unzer.helpers.DatabaseHelper;
 import com.unzer.util.Flow;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
