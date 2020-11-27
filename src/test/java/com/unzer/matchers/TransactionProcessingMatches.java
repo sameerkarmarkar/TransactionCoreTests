@@ -5,11 +5,11 @@ import net.hpcsoft.adapter.payonxml.ProcessingType;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
-public class ProcessingResponseMatches extends TypeSafeMatcher<ProcessingType> {
+public class TransactionProcessingMatches extends TypeSafeMatcher<ProcessingType> {
 
     private final TransactionProcessing transactionProcessing;
 
-    private ProcessingResponseMatches(TransactionProcessing status) {
+    private TransactionProcessingMatches(TransactionProcessing status) {
         this.transactionProcessing = status;
     }
 
@@ -44,7 +44,7 @@ public class ProcessingResponseMatches extends TypeSafeMatcher<ProcessingType> {
     }
 
 
-    public static ProcessingResponseMatches processingResponseMatches(TransactionProcessing status) {
-        return new ProcessingResponseMatches(status);
+    public static TransactionProcessingMatches transactionProcessingMatches(TransactionProcessing status) {
+        return new TransactionProcessingMatches(status);
     }
 }

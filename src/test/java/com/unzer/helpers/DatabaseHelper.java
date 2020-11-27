@@ -144,7 +144,7 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
-    public static ProcessingType getTransactionProcessingStatus(String shortId) {
+    public static ProcessingType getTransactionProcessing(String shortId) {
         String result = getTransactionResult(shortId);
         String statusCode = getTransactionStatus(shortId);
         String reasonCode = getTransactionReason(shortId);

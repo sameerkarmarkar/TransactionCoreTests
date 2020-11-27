@@ -6,7 +6,7 @@ import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static com.unzer.matchers.ProcessingResponseMatches.processingResponseMatches;
+import static com.unzer.matchers.TransactionProcessingMatches.transactionProcessingMatches;
 
 //TODO : Need to add the tests here
 //This is a placeholder for adding testcases for threeds 2.0 workflows
@@ -22,7 +22,7 @@ public class ThreedsOneTransactionsTest {
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
         assertThat("Transaction processing status is invalid", response.getTransaction().getProcessing(),
-                processingResponseMatches(TransactionProcessing.SUCCESSFUL));
+                transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
     }
 
     @Test

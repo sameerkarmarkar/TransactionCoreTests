@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static com.unzer.matchers.ProcessingResponseMatches.processingResponseMatches;
+import static com.unzer.matchers.TransactionProcessingMatches.transactionProcessingMatches;
 
 public class GiccProtocolTest extends BaseTest {
 
@@ -28,7 +28,7 @@ public class GiccProtocolTest extends BaseTest {
         ResponseType response = flow.getLastTransactionResponse();
         RequestType request = flow.getLastTransactionRequest();
         String shortId = response.getTransaction().getIdentification().getShortID();
-        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessingStatus(shortId), processingResponseMatches(TransactionProcessing.SUCCESSFUL));
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForOneOff(request.getTransaction().getAccount().getBrand());
     }
 
@@ -42,7 +42,7 @@ public class GiccProtocolTest extends BaseTest {
         ResponseType parentResponse = flow.getParentResponse();
         String shortId = response.getTransaction().getIdentification().getShortID();
         String parentShortId = parentResponse.getTransaction().getIdentification().getShortID();
-        assertThat("Transaction was not successful", response.getTransaction().getProcessing(), processingResponseMatches(TransactionProcessing.SUCCESSFUL));
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(cardBrand, parentShortId);
     }
 
@@ -55,10 +55,10 @@ public class GiccProtocolTest extends BaseTest {
                 .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds();
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
-        assertThat("Transaction was not successful", response.getTransaction().getProcessing(), processingResponseMatches(TransactionProcessing.PENDING));
-        String shortID = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+        String shortId = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
 
-        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForUnscheduledInitialRecurring(card.getCardBrand());
     }
 
     @ParameterizedTest
@@ -71,9 +71,9 @@ public class GiccProtocolTest extends BaseTest {
                 .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.REPEATED);
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
-        assertThat("Transaction was not successful", response.getTransaction().getProcessing(), processingResponseMatches(TransactionProcessing.SUCCESSFUL));
-        String shortID = response.getTransaction().getIdentification().getShortID();
-        GICC_VERIFIER.withShortId(shortID).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
+        String shortId = response.getTransaction().getIdentification().getShortID();
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
     }
 
     @ParameterizedTest
@@ -87,9 +87,9 @@ public class GiccProtocolTest extends BaseTest {
                 .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
-        assertThat("Transaction was not successful", response.getTransaction().getProcessing(), processingResponseMatches(TransactionProcessing.SUCCESSFUL));
-        String shortID = response.getTransaction().getIdentification().getShortID();
-        String scheduledTransaction  = DatabaseHelper.getScheduledTransactionShortId(shortID);
+        String shortId = response.getTransaction().getIdentification().getShortID();
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
+        String scheduledTransaction  = DatabaseHelper.getScheduledTransactionShortId(shortId);
         GICC_VERIFIER.withShortId(scheduledTransaction).getMessage().and().verifyFieldsForScheduledSubsequentRecurring(card.getCardBrand());
     }
 
