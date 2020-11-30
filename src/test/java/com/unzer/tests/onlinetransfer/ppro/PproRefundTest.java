@@ -8,6 +8,7 @@ import com.unzer.util.Flow;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -26,12 +27,13 @@ public class PproRefundTest extends BaseTest {
     public void shouldSendUsageAsDynamicDescriptorInFullRefund() {
         Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT)
                 .withPaymentMethod(ONLINE_TRANSFER).withPaymentNetwork(PaymentNetworkProvider.PPRO)
-                .startWith().preauthorization().withAccountHolder("Test Account", "ALIPAY");
+                .startWith().preauthorization().withAccountHolder("Test Account", "ALIPAY")
+                .withAmount("50");
 
         flow.execute();
 
         String receiptUniqueId = DatabaseHelper.getImplicitTransactionUniqueId(flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID(), "REC");
-        flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId);
+        flow.continueWith().refund().withAmount("50").referringToTransactionWithId(receiptUniqueId);
 
         flow.execute();
         verifyRefundResponse(flow);
@@ -61,17 +63,19 @@ public class PproRefundTest extends BaseTest {
         verifyRefundResponse(flow);
     }
 
+    @Disabled
     @Test
     public void shouldNotSendUsageAsDynamicDescriptorInSofortRefund() {
         Flow flow = Flow.forMerchant(Merchant.SOFORT_ONLINE_TRANSFER_MERCHANT)
                 .withPaymentMethod(ONLINE_TRANSFER).withPaymentNetwork(PaymentNetworkProvider.SOFORT)
                 .startWith().preauthorization().withAccountHolder("Test Account", "SOFORT")
+                .withAmount("2.34")
                 .withResponseUrl().withAmount("50");
 
         flow.execute();
 
         String receiptUniqueId = DatabaseHelper.getImplicitTransactionUniqueId(flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID(), "REC");
-        flow.continueWith().refund().referringToTransactionWithId(receiptUniqueId).withAmount("10");
+        flow.continueWith().refund().withAmount("2.34").referringToTransactionWithId(receiptUniqueId).withAmount("10");
         flow.execute();
 
         ResponseType refundResponse = flow.getLastTransactionResponse();
