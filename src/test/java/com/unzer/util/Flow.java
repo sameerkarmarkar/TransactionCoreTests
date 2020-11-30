@@ -75,7 +75,7 @@ public class Flow {
 
     public Flow capture() {
         savePrevious();
-        request = RequestBuilder.capture(merchant, paymentMethod, "100", "EUR", mode);
+        request = RequestBuilder.capture(merchant, paymentMethod,  mode);
         return this;
     }
 
@@ -87,7 +87,19 @@ public class Flow {
 
     public Flow refund() {
         savePrevious();
-        request = RequestBuilder.refund(merchant, paymentMethod, "100", "EUR", mode);
+        request = RequestBuilder.refund(merchant, paymentMethod, mode);
+        return this;
+    }
+
+    public Flow reversal() {
+        savePrevious();
+        request = RequestBuilder.reversal(merchant, paymentMethod, mode);
+        return this;
+    }
+
+    public Flow rebill() {
+        savePrevious();
+        request = RequestBuilder.rebill(merchant, paymentMethod, mode);
         return this;
     }
 
@@ -158,6 +170,11 @@ public class Flow {
         return this;
     }
 
+    public Flow withSource(String source) {
+        request = RequestBuilder.newRequest(request).withSource(source).build();
+        return this;
+    }
+
     public Flow asThreeds() {
         return asThreeds(ThreedsVersion.VERSION_2);
     }
@@ -206,7 +223,7 @@ public class Flow {
         return this;
     }
 
-    public void execute() {
+    public Flow execute() {
         savePrevious();
         for (Map.Entry<Integer, Executable> entry: executionSequence.entrySet()) {
             Executable e = entry.getValue();
@@ -230,6 +247,8 @@ public class Flow {
                 log.info("transaction "+ e.getRequest().getTransaction().getPayment().getCode() + " already executed. Evaluating the next in the flow");
             }
         }
+
+        return this;
     }
 
     private void updateParentTransactionInformation(Executable e) {

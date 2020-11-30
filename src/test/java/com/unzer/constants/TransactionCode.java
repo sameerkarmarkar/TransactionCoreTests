@@ -6,7 +6,9 @@ public enum TransactionCode {
     REFUND("RF"),
     DEBIT("DB"),
     REGISTERATION("RG"),
-    SCHEDULE("SD");
+    SCHEDULE("SD"),
+    REVERSAL("RV"),
+    REBILL("RB");
 
     private final String code;
 
