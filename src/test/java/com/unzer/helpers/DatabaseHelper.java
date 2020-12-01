@@ -158,6 +158,7 @@ public class DatabaseHelper {
             returnValue  = rs.getString(1);
             reasonValue =  rs.getString(2);
         }
+        rs.close();
 
         ProcessingType processingType = new ProcessingType();
         processingType.setResult(result);
@@ -188,6 +189,7 @@ public class DatabaseHelper {
 
         log.info("found {} records for the query {}", numberOfRecords, query);
         log.info("returning the column value from last record. value >> {}", output);
+        rs.close();
         return output;
     }
 

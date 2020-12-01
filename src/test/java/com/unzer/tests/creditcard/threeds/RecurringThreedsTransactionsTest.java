@@ -4,7 +4,9 @@ import com.unzer.constants.*;
 import com.unzer.tests.BaseTest;
 import com.unzer.helpers.DatabaseHelper;
 import com.unzer.util.Flow;
+import io.qameta.allure.Description;
 import net.hpcsoft.adapter.payonxml.ResponseType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -16,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class RecurringThreedsTransactionsTest extends BaseTest {
+public class RecurringThreedsTransactionsTest implements BaseTest {
 
     @Test
     public void shouldKeepTheTransactionPendingWhenThreedsAuthorizationIsNotCompleted() {
@@ -56,6 +58,7 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("unscheduledRecurringFlows")
+    @DisplayName("Call to SCA is not required for a unscheduled repeated recurring transaction")
     public void shouldNotNeedThreedsAuthorizationForUnscheduledRepeatedRecurring(String description, Flow flow) {
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
@@ -81,7 +84,7 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
     @Test
     public void shouldNotNeedThreedsAuthorizationForScheduledRecurringDebit() {
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                .startWith().register().withCard(Card.VISA_1)
+                .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().debit().referringToNth(TransactionCode.REGISTERATION)
                 .and().withResponseUrl().asThreeds().withRecurringIndicator(Recurrence.INITIAL)
                 .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);

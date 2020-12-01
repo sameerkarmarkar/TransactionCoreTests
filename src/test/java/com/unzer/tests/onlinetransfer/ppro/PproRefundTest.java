@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 @Tag("HPCTXNCORE-1934")
 @Slf4j
-public class PproRefundTest extends BaseTest {
+public class PproRefundTest implements BaseTest {
     @Test
     public void shouldSendUsageAsDynamicDescriptorInFullRefund() {
         Flow flow = Flow.forMerchant(Merchant.PPRO_IDEAL_MERCHANT)

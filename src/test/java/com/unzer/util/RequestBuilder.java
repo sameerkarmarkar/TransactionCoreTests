@@ -298,7 +298,7 @@ public class RequestBuilder {
     public RequestBuilder withResponseUrl() {
         TransactionRequestType transaction = requestType.getTransaction();
         FrontendType frontEndType = new FrontendType();
-        frontEndType.setResponseUrl("https://web.dev.hpchd.loc/testtool/response;jsessionid=F10438C50B5E4985731E4F6085DBF2B5.testtools01");
+        frontEndType.setResponseUrl("https://web.dev.hpchd.loc/testtool");
         transaction.setFrontend(frontEndType);
         requestType.setTransaction(transaction);
         return this;
