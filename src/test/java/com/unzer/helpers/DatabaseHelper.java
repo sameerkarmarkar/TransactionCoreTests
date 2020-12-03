@@ -19,7 +19,7 @@ public class DatabaseHelper {
     private final static Configuration config = Configuration.INSTANCE;
     private static Connection conn;
 
-    static {
+    private static void initialize() {
         if (conn == null) {
             try {
                 OracleDataSource ods = new OracleDataSource();
@@ -177,6 +177,7 @@ public class DatabaseHelper {
 
     @SneakyThrows
     private static String executeAndGetResult(String query) {
+        initialize();
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         int numberOfRecords = 0;
@@ -195,6 +196,7 @@ public class DatabaseHelper {
 
     @SneakyThrows
     private static ResultSet execute(String query) {
+        initialize();
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         return rs;

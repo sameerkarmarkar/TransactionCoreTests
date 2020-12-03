@@ -103,24 +103,24 @@ public class GiccProtocolTest implements BaseTest {
         return Stream.of(
                 Arguments.of("One off preauth with Mastercard",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().preauthorization().withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()),
+                                .startWith().preauthorization().withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl())/*,
                 Arguments.of("One off debit with Visa",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())
+                                .startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())*/
         );
     }
 
     private static Stream<Arguments> returningCustomer() {
         return Stream.of(
                 Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().debit().withAmount("10").withCard(Card.MASTERCARD_2).asThreeds().withResponseUrl()
+                        .startWith().debit().withAmount("10").withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()
                         .then().refund().withAmount("10").referringToNth(TransactionCode.DEBIT), "MASTER"),
                 Arguments.of("REGISTER >> DEBIT >> partial REFUND", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().register().withCard(Card.MASTERCARD_1)
+                        .startWith().register().withCard(Card.MASTERCARD_4)
                         .then().debit().withAmount("20").referringToNth(TransactionCode.REGISTERATION).asThreeds().withResponseUrl()
                         .then().refund().withAmount("10").referringToNth(TransactionCode.DEBIT), "MASTER"),
                 Arguments.of("PREAUTH >> CAPTURE >> REFUND", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().preauthorization().withAmount("100").withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()
+                        .startWith().preauthorization().withAmount("100").withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()
                         .then().capture().withAmount("100").referringToNth(TransactionCode.PREAUTHORIZATION)
                         .then().refund().withAmount("100").referringToNth(TransactionCode.CAPTURE), "MASTER")
         );
@@ -128,8 +128,8 @@ public class GiccProtocolTest implements BaseTest {
 
     private static Stream<Arguments> cards() {
         return Stream.of(
-                Arguments.of(Card.MASTERCARD_1, Merchant.SIX_THREEDS_TWO_MERCHANT),
-                Arguments.of(Card.VISA_2, Merchant.SIX_THREEDS_TWO_MERCHANT)
+                Arguments.of(Card.MASTERCARD_4, Merchant.SIX_THREEDS_TWO_MERCHANT)/*,
+                Arguments.of(Card.VISA_7, Merchant.SIX_THREEDS_TWO_MERCHANT)*/
         );
     }
 

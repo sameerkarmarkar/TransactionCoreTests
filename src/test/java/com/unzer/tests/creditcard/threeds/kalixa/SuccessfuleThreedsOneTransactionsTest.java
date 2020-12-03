@@ -160,6 +160,7 @@ public class SuccessfuleThreedsOneTransactionsTest implements BaseTest {
         assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
     }
 
+    @Disabled
     @ParameterizedTest
     @MethodSource("cards")
     public void shouldProcessReversalForNonCapturedAmount(Card card, String source) {
@@ -178,6 +179,7 @@ public class SuccessfuleThreedsOneTransactionsTest implements BaseTest {
         assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
     }
 
+    @Disabled
     @ParameterizedTest
     @MethodSource("cards")
     public void shouldProcessCaptureForNonReversedAmount(Card card, String source) {

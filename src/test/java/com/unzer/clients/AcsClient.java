@@ -62,6 +62,7 @@ public class AcsClient {
 
         RequestSpecification spec = new RequestSpecBuilder()
                 .setBaseUri(THREEDS_ONE_ACS_URL)
+                .setRelaxedHTTPSValidation()
                 .build();
 
         Map parameters = new HashMap<String, String>();

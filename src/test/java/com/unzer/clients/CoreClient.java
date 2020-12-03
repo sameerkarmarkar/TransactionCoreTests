@@ -37,7 +37,7 @@ public class CoreClient {
                 .filter(ResponseLoggingFilter())
                 .baseUri(config.getProperty("core.url"))
                 .with().formParam("load", requestString)
-                .when().post().then().log().all().and().extract().response();
+                .when().post().then().extract().response();
 
         String responseString = restResponse.asString();
         ResponseType response = unmarshal(responseString).getValue();
