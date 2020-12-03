@@ -217,8 +217,6 @@ public class SuccessfuleThreedsTwoTransactionsTest implements BaseTest {
         assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
     }
 
-
-    @Disabled
     @ParameterizedTest
     @MethodSource("cards")
     public void shouldProcessRebillForThreedsTwoPreauthorizationCapture(Card card, String source) {
@@ -230,6 +228,27 @@ public class SuccessfuleThreedsTwoTransactionsTest implements BaseTest {
                 .and().asThreeds(ThreedsVersion.VERSION_2)
                 .then().capture().referringToNth(TransactionCode.PREAUTHORIZATION).withAmount("50").withSource(source)
                 .then().rebill().referringToNth(TransactionCode.CAPTURE).withSource(source)
+                .withCard(card).and().withAmount("50")
+                .execute();
+
+        ResponseType response = flow.getLastTransactionResponse();
+        String shortId = response.getTransaction().getIdentification().getShortID();
+        assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
+    }
+
+    @ParameterizedTest
+    @MethodSource("cards")
+    public void shouldProcessRefundForRebill(Card card, String source) {
+        Flow flow = Flow.forMerchant(merchant).and().withPaymentMethod(PaymentMethod.CREDITCARD)
+                .startWith().preauthorization().withAmount("50")
+                .and().withSource(source)
+                .and().withCard(card)
+                .and().withResponseUrl()
+                .and().asThreeds(ThreedsVersion.VERSION_2)
+                .then().capture().referringToNth(TransactionCode.PREAUTHORIZATION).withAmount("50").withSource(source)
+                .then().rebill().referringToNth(TransactionCode.CAPTURE).withSource(source)
+                .withCard(card).and().withAmount("50")
+                .then().refund().withAmount("50").referringToNth(TransactionCode.REBILL)
                 .execute();
 
         ResponseType response = flow.getLastTransactionResponse();
