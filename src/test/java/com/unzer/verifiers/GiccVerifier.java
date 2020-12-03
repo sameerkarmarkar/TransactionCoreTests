@@ -16,7 +16,6 @@ import java.util.NoSuchElementException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GiccVerifier {
 
@@ -134,12 +133,15 @@ public class GiccVerifier {
     }
 
     @Step
-    public void verifyFieldsForUnscheduledSubsequentRecurring(String brand) {
+    public void verifyFieldsForUnscheduledSubsequentRecurring(String brand, String initialTransactionShortId) {
+        GiccMessage initialResponse = getGiccResponse(initialTransactionShortId);
         verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
-                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(true)),
-                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(true)),
+                () -> assertThat("invalid value for field 15", getFieldValue("15"),
+                        equalTo(initialResponse.containsField("15") ? initialResponse.fieldById("15").getValue() : null)),
+                () -> assertThat("invalid value for field 61", getFieldValue("61"),
+                        equalTo(initialResponse.containsField("61") ? initialResponse.fieldById("61").getValue() : null)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), is(equalTo("05"))),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
@@ -152,12 +154,15 @@ public class GiccVerifier {
     }
 
     @Step
-    public void verifyFieldsForScheduledSubsequentRecurring(String brand) {
+    public void verifyFieldsForScheduledSubsequentRecurring(String brand, String initialTransactionShortId) {
+        GiccMessage initialResponse = getGiccResponse(initialTransactionShortId);
         verifyMandatoryFields();
         assertAll(
                 () -> assertThat("Invalid value for field 22", getFieldValue("22"), equalTo("102")),
-                () -> assertThat("invalid value for field 15", isFieldPresent("15"), is(true)),
-                () -> assertThat("invalid value for field 61", isFieldPresent("61"), is(true)),
+                () -> assertThat("invalid value for field 15", getFieldValue("15"),
+                        equalTo(initialResponse.containsField("15") ? initialResponse.fieldById("15").getValue() : null)),
+                () -> assertThat("invalid value for field 61", getFieldValue("61"),
+                        equalTo(initialResponse.containsField("61") ? initialResponse.fieldById("61").getValue() : null)),
                 () -> assertThat("invalid value for field 60.40", getSubFieldValue("60", "40"), equalTo("07")),
                 () -> assertThat("invalid value for field 60.41", getSubFieldValue("60","41"), equalTo("02")),
                 () -> assertThat("invalid value for field 60.52", getSubFieldValue("60","52"), equalTo("003022")),
@@ -226,13 +231,22 @@ public class GiccVerifier {
         return "";
     }
 
+    @SneakyThrows
+    public GiccMessage getGiccResponse(String shortId) {
+        String giccMessage = DatabaseHelper.getGiccResponse(shortId);
+        JAXBContext jaxbContext = JAXBContext.newInstance(GiccMessage.class);
+
+        InputStream stream = new ByteArrayInputStream(giccMessage.getBytes("UTF-8"));
+
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        return  (GiccMessage) jaxbUnmarshaller.unmarshal(stream);
+    }
+
 
     public String getFieldValue(String fieldId) {
-        try {
-            return message.fieldById(fieldId).getValue();
-        } catch(NoSuchElementException e) {
-            return null;
-        }
+        return message.containsField(fieldId)
+                ? message.fieldById(fieldId).getValue()
+                : null;
 
     }
 

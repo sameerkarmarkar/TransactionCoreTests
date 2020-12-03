@@ -72,13 +72,16 @@ public class GiccProtocolTest implements BaseTest {
     public void shouldSendCorrectGiccMessageForUnscheduledRepeatedRecurringTransaction(Card card, Merchant merchant) {
         Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
-                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds()
-                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.REPEATED);
+                .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds().execute();
+
+        String initialTransactionShortId = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+
+        flow = flow.continueWith().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.REPEATED);
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
         String shortId = response.getTransaction().getIdentification().getShortID();
         assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
-        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand());
+        GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand(), initialTransactionShortId);
     }
 
     @ParameterizedTest
@@ -90,23 +93,26 @@ public class GiccProtocolTest implements BaseTest {
         Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
                 .then().debit().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).withResponseUrl().and().asThreeds()
-                .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);
+                .execute();
+        String initialTransactionShortId = flow.getLastTransactionResponse().getTransaction().getIdentification().getShortID();
+
+        flow = flow.continueWith().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
         String shortId = response.getTransaction().getIdentification().getShortID();
         assertThat("Transaction was not successful", DatabaseHelper.getTransactionProcessing(shortId), transactionProcessingMatches(TransactionProcessing.SUCCESSFUL));
         String scheduledTransaction  = DatabaseHelper.getScheduledTransactionShortId(shortId);
-        GICC_VERIFIER.withShortId(scheduledTransaction).getMessage().and().verifyFieldsForScheduledSubsequentRecurring(card.getCardBrand());
+        GICC_VERIFIER.withShortId(scheduledTransaction).getMessage().and().verifyFieldsForScheduledSubsequentRecurring(card.getCardBrand(), initialTransactionShortId);
     }
 
     private static Stream<Arguments> oneOffTransactions() {
         return Stream.of(
                 Arguments.of("One off preauth with Mastercard",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().preauthorization().withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl())/*,
+                                .startWith().preauthorization().withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()),
                 Arguments.of("One off debit with Visa",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().debit().withCard(Card.VISA_1).asThreeds().withResponseUrl())*/
+                                .startWith().debit().withCard(Card.VISA_8).asThreeds().withResponseUrl())
         );
     }
 
@@ -128,8 +134,8 @@ public class GiccProtocolTest implements BaseTest {
 
     private static Stream<Arguments> cards() {
         return Stream.of(
-                Arguments.of(Card.MASTERCARD_4, Merchant.SIX_THREEDS_TWO_MERCHANT)/*,
-                Arguments.of(Card.VISA_7, Merchant.SIX_THREEDS_TWO_MERCHANT)*/
+                Arguments.of(Card.MASTERCARD_4, Merchant.SIX_THREEDS_TWO_MERCHANT),
+                Arguments.of(Card.VISA_8, Merchant.SIX_THREEDS_TWO_MERCHANT)
         );
     }
 

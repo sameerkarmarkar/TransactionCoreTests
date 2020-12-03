@@ -92,6 +92,15 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
+    public static String getGiccResponse(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '22'";
+        String isoMessage = Eventually.get(() -> executeAndGetResult(query), 10, 1);;
+        if (isoMessage.isEmpty()) log.warn("no isoMessage found for short id {}", shortId);
+        return isoMessage;
+    }
+
+    @SneakyThrows
     public static String getDatabaseId(String shortId) {
         String query = "select id from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         String id = Eventually.get(() -> executeAndGetResult(query), 10, 1);
