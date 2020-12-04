@@ -2,6 +2,7 @@ package com.unzer.tests.creditcard.threeds.kalixa;
 
 import com.unzer.tests.BaseTest;
 import com.unzer.util.Flow;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.unzer.constants.Card.MASTERCARD_1;
@@ -58,7 +59,9 @@ public class SuccessfulCaptureTest implements BaseTest {
                 .and().withAmount("5.29")
                 .execute();
         flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("2.25").execute();
-        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("2.00").execute();
+
+        //TODO:Enable after partial capture has been implemented for KALIXA
+        //flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("2.00").execute();
     }
 
     @Test
@@ -71,11 +74,15 @@ public class SuccessfulCaptureTest implements BaseTest {
                 .execute();
 
         flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("5").execute();
-        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("3.25").execute();
-        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.75").execute();
+
+        //TODO:Enable after partial capture has been implemented for KALIXA
+        /*flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("3.25").execute();
+        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.75").execute();*/
 
     }
 
+    //TODO: Enable after partial capture has been implemented for KALIXA
+    @Disabled
     @Test
     public void shouldProcessMultiplePartialCapturesForCofPreauth() {
         Flow flow = Flow.forMerchant(KALIXA_NON_THREED_MERCHANT).withPaymentMethod(CREDITCARD)
@@ -85,9 +92,11 @@ public class SuccessfulCaptureTest implements BaseTest {
                 .execute();
 
         flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();
+
+        //TODO:Enable after partial capture has been implemented for KALIXA
+        /*flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();
         flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();
-        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();
-        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();
+        flow.continueWith().capture().referringToNth(PREAUTHORIZATION).withAmount("1.25").execute();*/
 
     }
 

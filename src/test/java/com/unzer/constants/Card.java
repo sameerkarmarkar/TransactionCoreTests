@@ -16,7 +16,7 @@ public enum Card {
     VISA_10("4761739001010010", "VISA", "12", "2025", "157", "Test Account"),
     VISA_11("4059200000000016", "VISA", "12", "2025", "157", "Test Account"),
     VISA_12("4761739090000096", "VISA", "12", "2022", "461", "Test Account"),
-    MASTERCARD_1("5453010000059543", "MASTER","11","2024","123", "Test Account"),
+    MASTERCARD_1("5453010000059543", "MASTER","11","2024","123", "Test Accoünt"),
     MASTERCARD_2("5266248793296818", "MASTER", "12", "2024", "123", "Test Account"),
     MASTERCARD_3("5266009957695322", "MASTER", "12", "2024", "123", "Test Account"),
     MASTERCARD_4("5544330000000003", "MASTER", "12", "2024", "123", "Test Account"),

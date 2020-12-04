@@ -8,7 +8,6 @@ import com.unzer.verifiers.GiccVerifier;
 import lombok.SneakyThrows;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,7 +22,6 @@ public class GiccProtocolTest implements BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("oneOffTransactions")
-    @DisplayName("Transaction core should send correct values in the GICC message for one off transaction")
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForOneOffThreedsTwoTransaction(String description, Flow flow) {
         flow.execute();
@@ -34,9 +32,8 @@ public class GiccProtocolTest implements BaseTest {
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForOneOff(request.getTransaction().getAccount().getBrand());
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "Returning cistomer transaction with {0}")
     @MethodSource("returningCustomer")
-    @DisplayName("Transaction core should send correct values in the GICC message for returning customer")
     @SneakyThrows
     public void shouldSendCorrectGiccMessageForReturningCustomerThreedsTwoTransaction(String description, Flow flow, String cardBrand) {
         flow.execute();
@@ -49,11 +46,10 @@ public class GiccProtocolTest implements BaseTest {
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForReturningCustomer(cardBrand, parentShortId);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Unscheduled initial recurring transaction with {0}")
     @MethodSource("cards")
-    @DisplayName("Transaction core should send correct values in the GICC message for initial recurring transaction")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForUnscheduledInitialRecurringTransaction(Card card, Merchant merchant) {
+    public void shouldSendCorrectGiccMessageForUnscheduledInitialRecurringTransaction(String description, Card card, Merchant merchant) {
         Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
                 .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds();
@@ -65,11 +61,10 @@ public class GiccProtocolTest implements BaseTest {
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForOneOff(card.getCardBrand());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Unscheduled repeated recurring transaction with {0}")
     @MethodSource("cards")
-    @DisplayName("Transaction core should send correct values in the GICC message for unscheduled repeated recurring transaction")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForUnscheduledRepeatedRecurringTransaction(Card card, Merchant merchant) {
+    public void shouldSendCorrectGiccMessageForUnscheduledRepeatedRecurringTransaction(String description, Card card, Merchant merchant) {
         Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
                 .then().debit().withResponseUrl().referringToNth(TransactionCode.REGISTERATION).and().withRecurringIndicator(Recurrence.INITIAL).asThreeds().execute();
@@ -84,11 +79,10 @@ public class GiccProtocolTest implements BaseTest {
         GICC_VERIFIER.withShortId(shortId).getMessage().and().verifyFieldsForUnscheduledSubsequentRecurring(card.getCardBrand(), initialTransactionShortId);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Scheduled repeated recurring transaction with {0}")
     @MethodSource("cards")
-    @DisplayName("Transaction core should send correct values in the GICC message for scheduled repeated recurring transaction")
     @SneakyThrows
-    public void shouldSendCorrectGiccMessageForSubsequentScheduledThreedsTwoTransaction(Card card, Merchant merchant) {
+    public void shouldSendCorrectGiccMessageForSubsequentScheduledThreedsTwoTransaction(String description, Card card, Merchant merchant) {
 
         Flow flow = Flow.forMerchant(merchant).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(card)
@@ -109,7 +103,7 @@ public class GiccProtocolTest implements BaseTest {
         return Stream.of(
                 Arguments.of("One off preauth with Mastercard",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                                .startWith().preauthorization().withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()),
+                                .startWith().preauthorization().withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()),
                 Arguments.of("One off debit with Visa",
                         Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
                                 .startWith().debit().withCard(Card.VISA_8).asThreeds().withResponseUrl())
@@ -119,14 +113,14 @@ public class GiccProtocolTest implements BaseTest {
     private static Stream<Arguments> returningCustomer() {
         return Stream.of(
                 Arguments.of("DEBIT >> REFUND with MASTERCARD", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().debit().withAmount("10").withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()
+                        .startWith().debit().withAmount("10").withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()
                         .then().refund().withAmount("10").referringToNth(TransactionCode.DEBIT), "MASTER"),
                 Arguments.of("REGISTER >> DEBIT >> partial REFUND", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().register().withCard(Card.MASTERCARD_4)
+                        .startWith().register().withCard(Card.MASTERCARD_1)
                         .then().debit().withAmount("20").referringToNth(TransactionCode.REGISTERATION).asThreeds().withResponseUrl()
                         .then().refund().withAmount("10").referringToNth(TransactionCode.DEBIT), "MASTER"),
                 Arguments.of("PREAUTH >> CAPTURE >> REFUND", Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().preauthorization().withAmount("100").withCard(Card.MASTERCARD_4).asThreeds().withResponseUrl()
+                        .startWith().preauthorization().withAmount("100").withCard(Card.MASTERCARD_1).asThreeds().withResponseUrl()
                         .then().capture().withAmount("100").referringToNth(TransactionCode.PREAUTHORIZATION)
                         .then().refund().withAmount("100").referringToNth(TransactionCode.CAPTURE), "MASTER")
         );
@@ -134,8 +128,8 @@ public class GiccProtocolTest implements BaseTest {
 
     private static Stream<Arguments> cards() {
         return Stream.of(
-                Arguments.of(Card.MASTERCARD_4, Merchant.SIX_THREEDS_TWO_MERCHANT),
-                Arguments.of(Card.VISA_8, Merchant.SIX_THREEDS_TWO_MERCHANT)
+                Arguments.of("MASTERCARD", Card.MASTERCARD_1, Merchant.SIX_THREEDS_TWO_MERCHANT),
+                Arguments.of("VISA", Card.VISA_8, Merchant.SIX_THREEDS_TWO_MERCHANT)
         );
     }
 

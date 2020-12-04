@@ -1,5 +1,6 @@
 package com.unzer.clients;
 
+import com.unzer.helpers.CustomAllureFilter;
 import com.unzer.util.Configuration;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -31,7 +32,7 @@ public class CoreClient {
         JAXBElement<RequestType> jaxbRequestType = new JAXBElement(_Request_QNAME, RequestType.class, (Class) null, requestType);
         String requestString = marshall(jaxbRequestType);
 
-        Response restResponse = RestAssured.given().log().all().relaxedHTTPSValidation()
+        Response restResponse = RestAssured.given().relaxedHTTPSValidation()
                 .filter(AllureRestAssured())
                 .filter(RequestLoggingFilter())
                 .filter(ResponseLoggingFilter())
@@ -47,8 +48,8 @@ public class CoreClient {
         return response;
     }
 
-    private AllureRestAssured AllureRestAssured() {
-        return new AllureRestAssured();
+    private CustomAllureFilter AllureRestAssured() {
+        return new CustomAllureFilter();
     }
 
     private RequestLoggingFilter RequestLoggingFilter() {

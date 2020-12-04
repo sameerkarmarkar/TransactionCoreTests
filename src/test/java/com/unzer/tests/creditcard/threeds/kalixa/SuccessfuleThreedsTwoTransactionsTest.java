@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import static com.unzer.matchers.TransactionProcessingMatches.transactionProcessingMatches;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@Disabled
 public class SuccessfuleThreedsTwoTransactionsTest implements BaseTest {
 
     private static final Merchant merchant = Merchant.KALIXA_THREEDS_TWO_MERCHANT;
