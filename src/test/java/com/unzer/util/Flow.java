@@ -1,8 +1,9 @@
 package com.unzer.util;
 
+import com.unzer.clients.AcsClient;
+import com.unzer.clients.CoreClient;
+import com.unzer.clients.OnlineTransferSimulator;
 import com.unzer.constants.*;
-import io.qameta.allure.Attachment;
-import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.RequestType;
 import net.hpcsoft.adapter.payonxml.ResponseType;
@@ -74,7 +75,7 @@ public class Flow {
 
     public Flow capture() {
         savePrevious();
-        request = RequestBuilder.capture(merchant, paymentMethod, "100", "EUR", mode);
+        request = RequestBuilder.capture(merchant, paymentMethod,  mode);
         return this;
     }
 
@@ -86,7 +87,19 @@ public class Flow {
 
     public Flow refund() {
         savePrevious();
-        request = RequestBuilder.refund(merchant, paymentMethod, "100", "EUR", mode);
+        request = RequestBuilder.refund(merchant, paymentMethod, mode);
+        return this;
+    }
+
+    public Flow reversal() {
+        savePrevious();
+        request = RequestBuilder.reversal(merchant, paymentMethod, mode);
+        return this;
+    }
+
+    public Flow rebill() {
+        savePrevious();
+        request = RequestBuilder.rebill(merchant, paymentMethod, mode);
         return this;
     }
 
@@ -157,6 +170,11 @@ public class Flow {
         return this;
     }
 
+    public Flow withSource(String source) {
+        request = RequestBuilder.newRequest(request).withSource(source).build();
+        return this;
+    }
+
     public Flow asThreeds() {
         return asThreeds(ThreedsVersion.VERSION_2);
     }
@@ -205,7 +223,7 @@ public class Flow {
         return this;
     }
 
-    public void execute() {
+    public Flow execute() {
         savePrevious();
         for (Map.Entry<Integer, Executable> entry: executionSequence.entrySet()) {
             Executable e = entry.getValue();
@@ -214,22 +232,23 @@ public class Flow {
                 RequestType transaction = e.getRequest();
                 updateParentTransactionInformation(e);
                 ResponseType response = coreClient.send(e.getRequest());
+                e.setResponse(response);
+                e.setExecuted(true);
+                log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
 
                 if (e.getShouldFail())
                     assertThat("Transaction response was ACK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.NOK.name()));
-                else
+                else {
                     assertThat("Transaction response was NOK", response.getTransaction().getProcessing().getResult(), equalTo(ProcessingResult.ACK.name()));
+                    handleExternalauthorization(e);
+                }
 
-                e.setResponse(response);
-
-                handleExternalauthorization(e);
-
-                e.setExecuted(true);
-                log.info("executed {}. Short id is {}", response.getTransaction().getPayment().getCode(), response.getTransaction().getIdentification().getShortID());
             } else {
                 log.info("transaction "+ e.getRequest().getTransaction().getPayment().getCode() + " already executed. Evaluating the next in the flow");
             }
         }
+
+        return this;
     }
 
     private void updateParentTransactionInformation(Executable e) {

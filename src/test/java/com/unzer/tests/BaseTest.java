@@ -1,10 +1,9 @@
 package com.unzer.tests;
 
-import com.unzer.util.DatabaseHelper;
+import com.unzer.helpers.DatabaseHelper;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 
-public class BaseTest {
+public interface BaseTest {
 
     @AfterAll
     public static void afterTest() {

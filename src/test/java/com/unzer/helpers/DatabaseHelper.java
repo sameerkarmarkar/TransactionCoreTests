@@ -1,7 +1,12 @@
-package com.unzer.util;
+package com.unzer.helpers;
 
+import com.unzer.chef.DataChef;
+import com.unzer.util.Configuration;
+import com.unzer.util.Eventually;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import net.hpcsoft.adapter.payonxml.ProcessingType;
+import net.hpcsoft.adapter.payonxml.StatusType;
 import oracle.jdbc.pool.OracleDataSource;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,7 +19,7 @@ public class DatabaseHelper {
     private final static Configuration config = Configuration.INSTANCE;
     private static Connection conn;
 
-    static {
+    private static void initialize() {
         if (conn == null) {
             try {
                 OracleDataSource ods = new OracleDataSource();
@@ -45,6 +50,18 @@ public class DatabaseHelper {
     }
 
     @SneakyThrows
+    public static String getTransactionReason(String shortId) {
+        String query = "Select ID_REASON from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
+    public static String getTransactionErrrorCode(String shortId) {
+        String query = "Select ID_ERROR_CODE from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
+        return Eventually.get(() -> executeAndGetResult(query));
+    }
+
+    @SneakyThrows
     public static String getInitiation(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_INITIATION from HPC.HPC_TXN_COFS where ID_TXN = '"+databaseId+"'";
@@ -69,6 +86,15 @@ public class DatabaseHelper {
     public static String getMessageSentToConnector(String shortId) {
         String databaseId = getDatabaseId(shortId);
         String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '21'";
+        String isoMessage = Eventually.get(() -> executeAndGetResult(query), 10, 1);;
+        if (isoMessage.isEmpty()) log.warn("no isoMessage found for short id {}", shortId);
+        return isoMessage;
+    }
+
+    @SneakyThrows
+    public static String getGiccResponse(String shortId) {
+        String databaseId = getDatabaseId(shortId);
+        String query = "Select STR_LOG from HPC.HPC_TXN_HISTORY where id_txn = '"+databaseId+"' and ID_TXN_STATUS_NEW = '22'";
         String isoMessage = Eventually.get(() -> executeAndGetResult(query), 10, 1);;
         if (isoMessage.isEmpty()) log.warn("no isoMessage found for short id {}", shortId);
         return isoMessage;
@@ -126,6 +152,33 @@ public class DatabaseHelper {
         return Eventually.get(() -> executeAndGetResult(query2), 10, 1);
     }
 
+    @SneakyThrows
+    public static ProcessingType getTransactionProcessing(String shortId) {
+        String result = getTransactionResult(shortId);
+        String statusCode = getTransactionStatus(shortId);
+        String reasonCode = getTransactionReason(shortId);
+        String errorCode = getTransactionErrrorCode(shortId);
+        String returnValue = StringUtils.EMPTY;
+        String reasonValue = StringUtils.EMPTY;
+        String statusValue = executeAndGetResult("Select STR_TXN_STATUS from HPC.HPC_TXN_STATUS where ID = '"+statusCode+"'");
+        String query = "Select STR_DESCRIPTION, STR_REASON from HPC.HPC_ERROR_CODES where ID_STATUS = '"+statusCode+"' and ID_REASON='"+reasonCode+"' and ID_ERROR_CODE='"+errorCode+"'";
+        ResultSet rs = execute(query);
+        while(rs.next()){
+            returnValue  = rs.getString(1);
+            reasonValue =  rs.getString(2);
+        }
+        rs.close();
+
+        ProcessingType processingType = new ProcessingType();
+        processingType.setResult(result);
+        processingType.setCode(statusCode);
+        processingType.setStatus(DataChef.statusType(statusCode, statusValue));
+        processingType.setReturn(DataChef.returnType(errorCode, returnValue));
+        processingType.setReason(DataChef.reasonType(reasonCode, reasonValue));
+
+        return processingType;
+    }
+
     public static String getTransactionType(String shortId) {
         String query = "Select ID_TXN_TYPE from HPC.HPC_TXNS where STR_SHORT_ID = '"+shortId+"'";
         return Eventually.get(() -> executeAndGetResult(query));
@@ -133,6 +186,7 @@ public class DatabaseHelper {
 
     @SneakyThrows
     private static String executeAndGetResult(String query) {
+        initialize();
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         int numberOfRecords = 0;
@@ -145,11 +199,13 @@ public class DatabaseHelper {
 
         log.info("found {} records for the query {}", numberOfRecords, query);
         log.info("returning the column value from last record. value >> {}", output);
+        rs.close();
         return output;
     }
 
     @SneakyThrows
-    private ResultSet execute(String query) {
+    private static ResultSet execute(String query) {
+        initialize();
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         return rs;

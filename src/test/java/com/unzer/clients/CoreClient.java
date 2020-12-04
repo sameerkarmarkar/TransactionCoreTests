@@ -1,5 +1,7 @@
-package com.unzer.util;
+package com.unzer.clients;
 
+import com.unzer.helpers.CustomAllureFilter;
+import com.unzer.util.Configuration;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.SneakyThrows;
@@ -30,13 +32,13 @@ public class CoreClient {
         JAXBElement<RequestType> jaxbRequestType = new JAXBElement(_Request_QNAME, RequestType.class, (Class) null, requestType);
         String requestString = marshall(jaxbRequestType);
 
-        Response restResponse = RestAssured.given().log().all().relaxedHTTPSValidation()
+        Response restResponse = RestAssured.given().relaxedHTTPSValidation()
                 .filter(AllureRestAssured())
                 .filter(RequestLoggingFilter())
                 .filter(ResponseLoggingFilter())
                 .baseUri(config.getProperty("core.url"))
                 .with().formParam("load", requestString)
-                .when().post().then().log().all().and().extract().response();
+                .when().post().then().extract().response();
 
         String responseString = restResponse.asString();
         ResponseType response = unmarshal(responseString).getValue();
@@ -46,8 +48,8 @@ public class CoreClient {
         return response;
     }
 
-    private AllureRestAssured AllureRestAssured() {
-        return new AllureRestAssured();
+    private CustomAllureFilter AllureRestAssured() {
+        return new CustomAllureFilter();
     }
 
     private RequestLoggingFilter RequestLoggingFilter() {

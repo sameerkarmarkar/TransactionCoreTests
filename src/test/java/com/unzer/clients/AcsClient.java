@@ -1,11 +1,12 @@
-package com.unzer.util;
+package com.unzer.clients;
 
 import com.unzer.constants.ThreedsVersion;
+import com.unzer.util.Configuration;
+import com.unzer.util.RestOperations;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.hpcsoft.adapter.payonxml.ResponseType;
 import org.jsoup.Jsoup;
@@ -61,6 +62,7 @@ public class AcsClient {
 
         RequestSpecification spec = new RequestSpecBuilder()
                 .setBaseUri(THREEDS_ONE_ACS_URL)
+                .setRelaxedHTTPSValidation()
                 .build();
 
         Map parameters = new HashMap<String, String>();

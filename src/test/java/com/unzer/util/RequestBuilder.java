@@ -1,6 +1,7 @@
 package com.unzer.util;
 
 import com.unzer.constants.*;
+import com.unzer.helpers.CronHelper;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import net.hpcsoft.adapter.payonxml.*;
@@ -69,7 +70,13 @@ public class RequestBuilder {
     public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,String amount, String currency, TransactionMode mode) {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(paymentMethod, TransactionCode.REFUND)
-                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
+    public static RequestType refund(Merchant merchant, PaymentMethod paymentMethod,TransactionMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(paymentMethod, TransactionCode.REFUND)
                 .and().withMode(mode)
                 .build();
     }
@@ -85,6 +92,35 @@ public class RequestBuilder {
         return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
                 .and().withTransactionType(paymentMethod, TransactionCode.CAPTURE)
                 .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
+    public static RequestType capture(Merchant merchant, PaymentMethod paymentMethod, TransactionMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(paymentMethod, TransactionCode.CAPTURE)
+                .and().withMode(mode)
+                .build();
+    }
+
+    public static RequestType reversal(Merchant merchant, PaymentMethod paymentMethod, String amount, String currency, TransactionMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(paymentMethod, TransactionCode.REVERSAL)
+                .and().withAmountAndCurrency(amount, currency)
+                .and().withMode(mode)
+                .build();
+    }
+
+    public static RequestType reversal(Merchant merchant, PaymentMethod paymentMethod, TransactionMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(paymentMethod, TransactionCode.REVERSAL)
+                .and().withMode(mode)
+                .build();
+    }
+
+    public static RequestType rebill(Merchant merchant, PaymentMethod paymentMethod, TransactionMode mode) {
+        return newRequest().withMerchant(merchant).withDefaultTransactionInfo()
+                .and().withTransactionType(paymentMethod, TransactionCode.REBILL)
                 .and().withMode(mode)
                 .build();
     }
@@ -262,7 +298,7 @@ public class RequestBuilder {
     public RequestBuilder withResponseUrl() {
         TransactionRequestType transaction = requestType.getTransaction();
         FrontendType frontEndType = new FrontendType();
-        frontEndType.setResponseUrl("https://web.dev.hpchd.loc/testtool/response;jsessionid=F10438C50B5E4985731E4F6085DBF2B5.testtools01");
+        frontEndType.setResponseUrl("https://web.dev.hpchd.loc/testtool");
         transaction.setFrontend(frontEndType);
         requestType.setTransaction(transaction);
         return this;
@@ -326,8 +362,14 @@ public class RequestBuilder {
         job.setDuration(duration);
 
         transaction.setJob(job);
+        requestType.setTransaction(transaction);
         return this;
 
+    }
+
+    public RequestBuilder withSource(String source) {
+        requestType.getTransaction().setSource(source);
+        return this;
     }
 
 }

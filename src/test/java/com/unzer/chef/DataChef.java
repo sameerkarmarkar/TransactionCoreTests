@@ -93,4 +93,25 @@ public class DataChef {
         return presentation;
     }
 
+    public static StatusType statusType(String code, String value) {
+        StatusType statusType = new StatusType();
+        statusType.setCode(code);
+        statusType.setValue(value);
+        return statusType;
+    }
+
+    public static ReturnType returnType(String code, String value) {
+        ReturnType returnType = new ReturnType();
+        returnType.setCode(code);
+        returnType.setValue(value);
+        return returnType;
+    }
+
+    public static ReasonType reasonType(String code, String value) {
+        ReasonType reasonType = new ReasonType();
+        reasonType.setCode(code);
+        reasonType.setValue(value);
+        return reasonType;
+    }
+
 }

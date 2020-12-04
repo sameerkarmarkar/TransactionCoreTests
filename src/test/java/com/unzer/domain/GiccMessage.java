@@ -21,6 +21,10 @@ public class GiccMessage {
     private List<GiccField> field;
 
     public GiccField fieldById(String id) {
-        return field.stream().filter(f -> f.getId().equals(id)).findFirst().get();
+        return field.stream().filter(f -> f.getId().equals(id)).findFirst().orElse(null);
+    }
+
+    public boolean containsField(String id) {
+        return null != fieldById(id);
     }
 }

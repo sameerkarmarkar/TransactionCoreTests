@@ -2,9 +2,10 @@ package com.unzer.tests.creditcard.threeds;
 
 import com.unzer.constants.*;
 import com.unzer.tests.BaseTest;
-import com.unzer.util.DatabaseHelper;
+import com.unzer.helpers.DatabaseHelper;
 import com.unzer.util.Flow;
 import net.hpcsoft.adapter.payonxml.ResponseType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -16,12 +17,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class RecurringThreedsTransactionsTest extends BaseTest {
+public class RecurringThreedsTransactionsTest implements BaseTest {
 
     @Test
     public void shouldKeepTheTransactionPendingWhenThreedsAuthorizationIsNotCompleted() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                .startWith().register().withCard(Card.MASTERCARD_1)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT_1).withPaymentMethod(PaymentMethod.CREDITCARD)
+                .startWith().register().withCard(Card.MASTERCARD_4)
                 .then().debit().referringToNth(TransactionCode.REGISTERATION).withResponseUrl();
 
         flow.execute();
@@ -38,8 +39,8 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
 
     @Test
     public void shouldCompleteTransactionProcesingWhenThreedsAuthorizationIsCompleted() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                .startWith().register().withCard(Card.MASTERCARD_1)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT_1).withPaymentMethod(PaymentMethod.CREDITCARD)
+                .startWith().register().withCard(Card.MASTERCARD_4)
                 .then().preauthorization().referringToNth(TransactionCode.REGISTERATION).withResponseUrl().asThreeds(ThreedsVersion.VERSION_1);
 
         flow.execute();
@@ -56,6 +57,7 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("unscheduledRecurringFlows")
+    @DisplayName("Call to SCA is not required for a unscheduled repeated recurring transaction")
     public void shouldNotNeedThreedsAuthorizationForUnscheduledRepeatedRecurring(String description, Flow flow) {
         flow.execute();
         ResponseType response = flow.getLastTransactionResponse();
@@ -64,7 +66,7 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
 
     @Test
     public void shouldNotNeedThreedsAuthorizationForScheduledRecurringPreauthorization() {
-        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
+        Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT_1).withPaymentMethod(PaymentMethod.CREDITCARD)
                 .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().preauthorization().referringToNth(TransactionCode.REGISTERATION)
                 .and().withResponseUrl().asThreeds(ThreedsVersion.VERSION_1).withRecurringIndicator(Recurrence.INITIAL)
@@ -81,7 +83,7 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
     @Test
     public void shouldNotNeedThreedsAuthorizationForScheduledRecurringDebit() {
         Flow flow = Flow.forMerchant(Merchant.SIX_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                .startWith().register().withCard(Card.VISA_1)
+                .startWith().register().withCard(Card.MASTERCARD_1)
                 .then().debit().referringToNth(TransactionCode.REGISTERATION)
                 .and().withResponseUrl().asThreeds().withRecurringIndicator(Recurrence.INITIAL)
                 .then().schedule().withSchedule(TransactionCode.DEBIT).referringToNth(TransactionCode.REGISTERATION);
@@ -131,8 +133,8 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
     private static Stream<Arguments> unscheduledRecurringFlows() {
         return Stream.of(
                 Arguments.of("Threeds Version One flow: REG >> PREAUTH >> PREAUTH (SIX)",
-                        Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().register().withCard(Card.MASTERCARD_1)
+                        Flow.forMerchant(Merchant.SIX_THREEDS_ONE_MERCHANT_1).withPaymentMethod(PaymentMethod.CREDITCARD)
+                        .startWith().register().withCard(Card.MASTERCARD_4)
                         .then().preauthorization().referringToNth(TransactionCode.REGISTERATION)
                         .and().withResponseUrl().asThreeds(ThreedsVersion.VERSION_1).withRecurringIndicator(Recurrence.INITIAL)
                         .then().preauthorization().referringToNth(TransactionCode.REGISTERATION).withRecurringIndicator(Recurrence.REPEATED)),
@@ -150,17 +152,10 @@ public class RecurringThreedsTransactionsTest extends BaseTest {
                         .then().debit().referringToNth(TransactionCode.REGISTERATION)),
                 Arguments.of("Threeds version one flow: REG >> PREAUTH >> DEBIT >> DEBIT (KALIXA)",
                         Flow.forMerchant(Merchant.KALIXA_THREEDS_ONE_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().register().withCard(Card.MASTERCARD_2)
+                        .startWith().register().withCard(Card.MASTERCARD_1)
                         .then().preauthorization().referringToNth(TransactionCode.REGISTERATION).and().withResponseUrl().asThreeds(ThreedsVersion.VERSION_1)
                         .then().debit().referringToNth(TransactionCode.REGISTERATION)
-                        .then().debit().referringToNth(TransactionCode.REGISTERATION)),
-                Arguments.of("Threeds version two flow: REG >> DEBIT >> DEBIT >> DEBIT (PAYONE)",
-                        Flow.forMerchant(Merchant.PAYONE_THREEDS_TWO_MERCHANT).withPaymentMethod(PaymentMethod.CREDITCARD)
-                        .startWith().register().withCard(Card.MASTERCARD_3)
-                        .then().debit().referringToNth(TransactionCode.REGISTERATION).and().withResponseUrl().and().asThreeds()
-                        .then().debit().referringToNth(TransactionCode.REGISTERATION)
                         .then().debit().referringToNth(TransactionCode.REGISTERATION))
-
                 );
     }
 
